@@ -2,7 +2,7 @@
 
 spook is immediate functions library.
 
-Immediate function is consteval function for C++20.
+Immediate function is consteval function on C++20.
 
 - header only
 - type safe
