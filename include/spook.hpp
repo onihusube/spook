@@ -165,7 +165,7 @@ namespace spook {
 		}
 
 		namespace detail {
-
+			
 			/**
 			* @brief 三角関数の入力を[0, π]の範囲に収める
 			* @param theta θ[rad]
@@ -212,11 +212,16 @@ namespace spook {
 			T series = theta;
 			T tmp = theta;
 			T fact = T(2.0);
+			T r{};  //積み残し
+			T t{};  //級数和の一時変数
 
 			//マクローリン級数の計算
 			do {
 				tmp *= x_sq / (fact * (fact + T(1.0)));
-				series += tmp;
+				t = series + (tmp + r);
+				r = (tmp + r) - (t - series);
+				series = t;
+				//series += tmp;
 				fact += T(2.0);
 			} while (spook::fabs(tmp) >= std::numeric_limits<T>::epsilon());
 
@@ -242,11 +247,15 @@ namespace spook {
 			T series = T(1.0);
 			T tmp = T(1.0);
 			T fact = T(1.0);
+			T r{};  //積み残し
+			T t{};  //級数和の一時変数
 
 			//マクローリン級数の計算
 			do {
 				tmp *= x_sq / (fact * (fact + T(1.0)));
-				series += tmp;
+				t = series + (tmp + r);
+				r = (tmp + r) - (t - series);
+				series = t;
 				fact += T(2.0);
 			} while (spook::fabs(tmp) >= std::numeric_limits<T>::epsilon());
 
@@ -304,11 +313,15 @@ namespace spook {
 			T series = T(1.0);
 			T tmp = T(1.0);
 			T n = T(1.0);
+			T r{};  //積み残し
+			T t{};  //級数和の一時変数
 
 			//マクローリン級数の計算
 			do {
 				tmp *= x / n;
-				series += tmp;
+				t = series + (tmp + r);
+				r = (tmp + r) - (t - series);
+				series = t;
 				++n;
 			} while (spook::fabs(tmp) >= std::numeric_limits<T>::epsilon());
 
