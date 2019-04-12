@@ -1,5 +1,8 @@
 # spook
 
-spook is immidiate functions library.
+spook is immediate functions library.
 
-immidiate function is consteval function for C++20.
+immediate function is consteval function for C++20.
+
+- type safe
+- no undefined behavior
