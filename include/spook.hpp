@@ -15,6 +15,17 @@
 
 #endif // SPOOK_NOT_USE_CONSTEVAL
 
+namespace spook {
+
+	/**
+	* @brief numeric_limitsをadaptするtraits
+	* @detail これは組み込み型等のためのstd::numeric_limits<T>を使用するもの
+	* @detail 組み込み型でない型で使用する場合は同じシグネチャになるように部分特殊化する
+	*/
+	template<typename T>
+	struct numeric_limits_traits : public std::numeric_limits<T> {};
+}
+
 
 namespace spook {
 	inline namespace cmath {
@@ -66,8 +77,8 @@ namespace spook {
 
 		template<typename T>
 		SPOOK_CONSTEVAL auto isinf(T x) -> bool {
-			if ((std::numeric_limits<T>::max)() < x) return true;
-			if (x < std::numeric_limits<T>::lowest()) return true;
+			if ((spook::numeric_limits_traits<T>::max)() < x) return true;
+			if (x < spook::numeric_limits_traits<T>::lowest()) return true;
 			return false;
 		}
 
@@ -78,7 +89,7 @@ namespace spook {
 
 		template<typename T>
 		SPOOK_CONSTEVAL auto fabs(T x) -> T {
-			if (std::numeric_limits<T>::is_iec559) {
+			if (spook::numeric_limits_traits<T>::is_iec559) {
 				if (x == 0.0) return +0.0;
 			}
 			return (x < 0.0) ? (-x) : (x);
@@ -99,14 +110,14 @@ namespace spook {
 
 		template<typename T>
 		SPOOK_CONSTEVAL auto copysign(T x, T y) -> T {
-			auto absv = spook::isnan(x) ? std::numeric_limits<T>::quiet_NaN() : spook::fabs(x);
+			auto absv = spook::isnan(x) ? spook::numeric_limits_traits<T>::quiet_NaN() : spook::fabs(x);
 
 			return spook::signbit(y) ? -absv : absv;
 		}
 
 		template<typename T>
 		SPOOK_CONSTEVAL auto ceil(T x) -> T {
-			if (std::numeric_limits<T>::is_iec559) {
+			if (spook::numeric_limits_traits<T>::is_iec559) {
 				if (x == 0.0) return x;
 				if (spook::isinf(x)) return x;
 			}
@@ -123,7 +134,7 @@ namespace spook {
 
 		template<typename T>
 		SPOOK_CONSTEVAL auto floor(T x) -> T {
-			if (std::numeric_limits<T>::is_iec559) {
+			if (spook::numeric_limits_traits<T>::is_iec559) {
 				if (x == 0.0) return x;
 				if (spook::isinf(x)) return x;
 			}
@@ -196,14 +207,14 @@ namespace spook {
 		}
 
 		template<typename T>
-		SPOOK_CONSTEVAL auto sin(T x) -> T {
-			if (std::numeric_limits<T>::is_iec559) {
-				if (x == 0.0) return x;
-				if (spook::isinf(x)) return std::numeric_limits<T>::quiet_NaN();
-				if (spook::isnan(x)) return std::numeric_limits<T>::quiet_NaN();
+		SPOOK_CONSTEVAL auto sin(T arg) -> T {
+			if (spook::numeric_limits_traits<T>::is_iec559) {
+				if (arg == 0.0) return arg;
+				if (spook::isinf(arg)) return spook::numeric_limits_traits<T>::quiet_NaN();
+				if (spook::isnan(arg)) return spook::numeric_limits_traits<T>::quiet_NaN();
 			}
 
-			auto [theta, isodd] = detail::reduce_theta(x);
+			auto [theta, isodd] = detail::reduce_theta(arg);
 
 			//πの整数倍の時
 			if (theta == 0.0) return 0.0;
@@ -223,22 +234,22 @@ namespace spook {
 				series = t;
 				//series += tmp;
 				fact += T(2.0);
-			} while (spook::fabs(tmp) >= std::numeric_limits<T>::epsilon());
+			} while (spook::fabs(tmp) >= spook::numeric_limits_traits<T>::epsilon());
 
 			series = isodd ? -series : series;
-			return spook::signbit(x) ? -series : series;
+			return spook::signbit(arg) ? -series : series;
 		}
 
 
 		template<typename T>
-		SPOOK_CONSTEVAL auto cos(T x) -> T {
-			if (std::numeric_limits<T>::is_iec559) {
-				if (x == 0.0) return 1.0;
-				if (spook::isinf(x)) return std::numeric_limits<T>::quiet_NaN();
-				if (spook::isnan(x)) return std::numeric_limits<T>::quiet_NaN();
+		SPOOK_CONSTEVAL auto cos(T arg) -> T {
+			if (spook::numeric_limits_traits<T>::is_iec559) {
+				if (arg == 0.0) return 1.0;
+				if (spook::isinf(arg)) return spook::numeric_limits_traits<T>::quiet_NaN();
+				if (spook::isnan(arg)) return spook::numeric_limits_traits<T>::quiet_NaN();
 			}
 
-			auto [theta, isodd] = detail::reduce_theta(x);
+			auto [theta, isodd] = detail::reduce_theta(arg);
 
 			//π/2の整数倍の時
 			if (theta == 0.5 * constant::π<T>) return 0.0;
@@ -257,52 +268,36 @@ namespace spook {
 				r = (tmp + r) - (t - series);
 				series = t;
 				fact += T(2.0);
-			} while (spook::fabs(tmp) >= std::numeric_limits<T>::epsilon());
+			} while (spook::fabs(tmp) >= spook::numeric_limits_traits<T>::epsilon());
 
 			series = isodd ? -series : series;
 			return series;
 		}
 
-		//template<typename T>
-		//SPOOK_CONSTEVAL auto cos2(T theta) -> T {
-		//	T x_sq = -(theta * theta);
-		//	T section_tmp = T(1.0);
-		//	T fact = T(1.0);
+		template<typename T>
+		SPOOK_CONSTEVAL auto tan(T arg) -> T {
+			if (spook::numeric_limits_traits<T>::is_iec559) {
+				if (arg == 0.0) return arg;
+				if (spook::isinf(arg)) return spook::numeric_limits_traits<T>::quiet_NaN();
+				if (spook::isnan(arg)) return spook::numeric_limits_traits<T>::quiet_NaN();
+			}
 
-		//	auto maclaurin_series = [x_sq, &section_tmp, &fact]() constexpr -> T {
-		//		//マクローリン級数の各項を逐次計算
-		//		section_tmp *= x_sq / (fact * (fact + T(1.0)));
-		//		fact += T(2.0);
+			auto[theta, isodd] = detail::reduce_theta(arg);
 
-		//		return section_tmp;
-		//	};
+			//π/2の整数倍の時
+			if (theta == 0.5 * constant::π<T>) return spook::numeric_limits_traits<T>::infinity();
 
-		//	//cosのマクローリン展開+Euiler変換
+			auto sin_v = spook::sin(theta);
+			auto cos_v = spook::cos(theta);
 
-		//	T series = T(0.5);
-		//	T coeff = -0.25;
-		//	T prev_section = T(1.0);
-		//	T tmp{};
-		//	T section{};
+			auto tan = sin_v / cos_v;
 
-		//	do {
-		//		auto t_section = maclaurin_series();
-		//		tmp = t_section - prev_section - tmp;
-		//		prev_section = std::move(t_section);
-
-		//		section = coeff * tmp;
-		//		series += section;
-
-		//		coeff *= -0.5;
-		//	} while (spook::fabs(section) >= std::numeric_limits<T>::epsilon());
-
-		//	return series;
-		//}
-
+			return spook::signbit(arg) ? -tan : tan;
+		}
 
 		template<typename T>
 		SPOOK_CONSTEVAL auto exp(T x) -> T {
-			if (std::numeric_limits<T>::is_iec559) {
+			if (spook::numeric_limits_traits<T>::is_iec559) {
 				if (x == T(0.0)) return T(1.0);
 				if (isinf(x)) {
 					if (x < T(0.0)) return T(+0.0);
@@ -322,8 +317,8 @@ namespace spook {
 				t = series + (tmp + r);
 				r = (tmp + r) - (t - series);
 				series = t;
-				++n;
-			} while (spook::fabs(tmp) >= std::numeric_limits<T>::epsilon());
+				n += T(1.0);
+			} while (spook::fabs(tmp) >= spook::numeric_limits_traits<T>::epsilon());
 
 			return series;
 		}
