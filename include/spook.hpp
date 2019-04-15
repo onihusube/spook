@@ -90,9 +90,11 @@ namespace spook {
 		template<typename T>
 		SPOOK_CONSTEVAL auto fabs(T x) -> T {
 			if (spook::numeric_limits_traits<T>::is_iec559) {
-				if (x == 0.0) return +0.0;
+				if (x == 0.0) return T(+0.0);
 			}
-			return (x < 0.0) ? (-x) : (x);
+
+			return spook::signbit(x) ? -x : x;
+			//return (x < 0.0) ? (-x) : (x);
 		}
 
 		template<typename T>
@@ -151,7 +153,7 @@ namespace spook {
 
 		template<typename T>
 		SPOOK_CONSTEVAL auto trunc(T x) -> T {
-			if (x < 0.0) {
+			if (spook::signbit(x)) {
 				return spook::ceil(x);
 			}
 			else {
@@ -296,15 +298,50 @@ namespace spook {
 		}
 
 		template<typename T>
-		SPOOK_CONSTEVAL auto exp(T x) -> T {
+		SPOOK_CONSTEVAL auto atan(T arg) -> T {
 			if (spook::numeric_limits_traits<T>::is_iec559) {
-				if (x == T(0.0)) return T(1.0);
-				if (isinf(x)) {
-					if (x < T(0.0)) return T(+0.0);
-					return x;
+				if (arg == T(0.0)) return T(1.0);
+				if (isinf(arg)) return spook::copysign(spook::constant::π<T> / 2.0, arg);
+			}
+
+			//0 < x の所で計算
+			const T x = spook::signbit(arg) ? -arg : arg;
+			const T coeff = x / (T(1.0) + x * x);
+			const T coeff2 = x * coeff;
+
+			T k = T(1.0);
+			T tmp = T(1.0);
+			T series = T(1.0);
+			T r{};  //積み残し
+			T t{};  //級数和の一時変数
+
+			do {
+				auto k_2 = k + k;
+				tmp *= k_2 / (k_2 + T(1.0)) * coeff2;
+
+				t = series + (tmp + r);
+				r = (tmp + r) - (t - series);
+				series = t;
+
+				k += T(1.0);
+			} while (spook::fabs(tmp) >= spook::numeric_limits_traits<T>::epsilon());
+
+			//適正な符号へ戻す
+			return spook::copysign(coeff * series, arg);
+		}
+
+		template<typename T>
+		SPOOK_CONSTEVAL auto exp(T arg) -> T {
+			if (spook::numeric_limits_traits<T>::is_iec559) {
+				if (arg == T(0.0)) return T(1.0);
+				if (isinf(arg)) {
+					if (arg < T(0.0)) return T(+0.0);
+					return arg;
 				}
 			}
 
+			//0 < x の範囲で計算
+			T x = spook::signbit(arg)? -arg : arg;
 			T series = T(1.0);
 			T tmp = T(1.0);
 			T n = T(1.0);
@@ -320,7 +357,8 @@ namespace spook {
 				n += T(1.0);
 			} while (spook::fabs(tmp) >= spook::numeric_limits_traits<T>::epsilon());
 
-			return series;
+			//適正な値へ
+			return spook::signbit(arg) ? (1.0 / series) : series;
 		}
 
 	}

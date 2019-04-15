@@ -55,11 +55,42 @@ namespace spook_test::cmath {
 
 		TEST_METHOD(signbit_test) {
 			Assert::IsTrue(spook::signbit(-1.0));
-			//Assert::IsTrue(spook::signbit(-0.0));
-
 			Assert::IsFalse(spook::signbit(1.0));
+
+			constexpr auto inf = std::numeric_limits<double>::infinity();
+
+			Assert::IsTrue(spook::signbit(-inf));
+			Assert::IsFalse(spook::signbit(inf));
+
+			//未対応
+			//Assert::IsTrue(spook::signbit(-0.0));
 			//Assert::IsFalse(spook::signbit(0.0));
+
+			constexpr auto nan = std::numeric_limits<double>::quiet_NaN();
+			//Assert::IsTrue(spook::signbit(-nan));
+			//Assert::IsFalse(spook::signbit(nan));
 		}
+
+		TEST_METHOD(copysign_test) {
+
+			Assert::AreEqual(+2.0, spook::copysign(2.0, +2.0));
+			Assert::AreEqual(-2.0, spook::copysign(2.0, -2.0));
+
+			Assert::AreEqual(+2.0, spook::copysign(-2.0, +2.0));
+			Assert::AreEqual(-2.0, spook::copysign(-2.0, -2.0));
+
+			constexpr auto nan = std::numeric_limits<double>::quiet_NaN();
+			constexpr auto inf = std::numeric_limits<double>::infinity();
+
+			//Assert::IsTrue (spook::signbit(spook::copysign(nan, -2.0)));
+			//Assert::IsFalse(spook::signbit(spook::copysign(nan, +2.0)));
+			Assert::IsTrue (std::signbit(spook::copysign(nan, -2.0)));
+			Assert::IsFalse(std::signbit(spook::copysign(nan, +2.0)));
+
+			Assert::AreEqual(+inf, spook::copysign(inf, +2.0));
+			Assert::AreEqual(-inf, spook::copysign(inf, -2.0));
+		}
+
 
 
 		TEST_METHOD(ceil_test) {
@@ -268,6 +299,79 @@ namespace spook_test::cmath {
 
 				Assert::AreEqual(expected, calc, 1.0E-15);
 				//Assert::AreEqual(expected, calc, 1.0E-14);
+			}
+		}
+
+		TEST_METHOD(atan_test) {
+
+			{
+				auto expected = 4.0 * std::atan(1.0);
+				constexpr auto pi = 4.0 * spook::atan(1.0);
+
+				Assert::AreEqual(expected, pi, 1.0E-15);
+			}
+
+			{
+				auto expected = std::atan(-1.0);
+				constexpr auto calc = spook::atan(-1.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::atan(-0.75);
+				constexpr auto calc = spook::atan(-0.75);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::atan(-0.5);
+				constexpr auto calc = spook::atan(-0.5);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::atan(-0.25);
+				constexpr auto calc = spook::atan(-0.25);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::atan(0.0);
+				constexpr auto calc = spook::atan(0.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::atan(0.25);
+				constexpr auto calc = spook::atan(0.25);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::atan(0.5);
+				constexpr auto calc = spook::atan(0.5);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::atan(0.75);
+				constexpr auto calc = spook::atan(0.75);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::atan(1.0);
+				constexpr auto calc = spook::atan(1.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
 			}
 		}
 
