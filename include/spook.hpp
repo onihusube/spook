@@ -296,6 +296,46 @@ namespace spook {
 
 			return spook::signbit(arg) ? -tan : tan;
 		}
+		
+		template<typename T>
+		SPOOK_CONSTEVAL auto asin(T arg) -> T {
+			if (spook::numeric_limits_traits<T>::is_iec559) {
+				if (arg == 0.0) return arg;
+				if (T(1.0) < spook::fabs(arg)) return spook::numeric_limits_traits<T>::quiet_NaN();
+			}
+
+			//0 <= x の所で計算
+			const T x = spook::fabs(arg);
+			T x_sq = x * x;
+			T k = T(1.0);
+			T tmp = x;
+			T term = T(1.0);
+			T series = x;
+			T r{};  //積み残し
+			T t{};  //級数和の一時変数
+
+			do {
+				tmp *= k / (k + T(1.0)) * x_sq;
+				k += T(2.0);
+				term = tmp / k;
+
+				t = series + (term + r);
+				r = (term + r) - (t - series);
+				series = t;
+			} while (spook::fabs(term) >= spook::numeric_limits_traits<T>::epsilon());
+
+			return spook::copysign(series, arg);;
+		}
+
+		template<typename T>
+		SPOOK_CONSTEVAL auto acos(T arg) -> T {
+			if (spook::numeric_limits_traits<T>::is_iec559) {
+				if (arg == 0.0) return arg;
+				if (T(1.0) < spook::fabs(arg)) return spook::numeric_limits_traits<T>::quiet_NaN();
+			}
+
+			return T(0.5) * constant::π<T>* spook::asin(arg);
+		}
 
 		template<typename T>
 		SPOOK_CONSTEVAL auto atan(T arg) -> T {
@@ -305,7 +345,7 @@ namespace spook {
 			}
 
 			//0 < x の所で計算
-			const T x = spook::signbit(arg) ? -arg : arg;
+			const T x = spook::fabs(arg);
 			const T coeff = x / (T(1.0) + x * x);
 			const T coeff2 = x * coeff;
 

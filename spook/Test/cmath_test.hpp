@@ -129,6 +129,15 @@ namespace spook_test::cmath {
 			Assert::IsTrue(-3.0 == spook::trunc(-3.9));
 		}
 
+		TEST_METHOD(remainder_test) {
+			constexpr auto r = spook::remainder(3.5, 2.0);
+		}
+
+		TEST_METHOD(fabs_test) {
+			constexpr auto r = spook::fmod(3.5, 2.0);
+
+		}
+
 		TEST_METHOD(sin_test) {
 			using namespace spook::constant;
 
@@ -300,6 +309,11 @@ namespace spook_test::cmath {
 				Assert::AreEqual(expected, calc, 1.0E-15);
 				//Assert::AreEqual(expected, calc, 1.0E-14);
 			}
+		}
+
+		TEST_METHOD(asin_test) {
+			constexpr auto as = spook::asin(0.5);
+			//constexpr auto ac = spook::acos(-1.0);
 		}
 
 		TEST_METHOD(atan_test) {
