@@ -88,6 +88,11 @@ namespace spook {
 		}
 
 		template<typename T>
+		SPOOK_CONSTEVAL auto iszero(T x) -> bool {
+			return x == T(0.0);
+		}
+
+		template<typename T>
 		SPOOK_CONSTEVAL auto fabs(T x) -> T {
 			if (spook::numeric_limits_traits<T>::is_iec559) {
 				if (x == 0.0) return T(+0.0);
@@ -368,6 +373,59 @@ namespace spook {
 
 			//適正な符号へ戻す
 			return spook::copysign(coeff * series, arg);
+		}
+
+		template<typename T>
+		SPOOK_CONSTEVAL auto atan2(T y, T x) -> T {
+			if (spook::numeric_limits_traits<T>::is_iec559) {
+				if (spook::iszero(y)) {
+					if (spook::signbit(x)) {
+						return spook::copysign(spook::constant::π<T>, y);
+					}
+					else {
+						return spook::copysign(T(0.0), y);
+					}
+				}
+
+				if (spook::iszero(x)) {
+					return spook::copysign(spook::constant::π<T> / T(2.0), y);
+				}
+
+				if (spook::isinf(y)) {
+					if (spook::isinf(x)) {
+						if (spook::signbit(x)) {
+							return spook::copysign(T(3.0) * spook::constant::π<T> / T(4.0), y);
+						}
+						else {
+							return spook::copysign(spook::constant::π<T> / T(4.0), y);
+						}
+					}
+
+					return spook::copysign(spook::constant::π<T> / T(2.0), y);
+				}
+				else {
+					if (spook::isinf(x)) {
+						if (spook::signbit(x)) {
+							return spook::copysign(spook::constant::π<T>, y);
+						}
+						else {
+							return spook::copysign(T(0.0), y);
+						}
+					}
+				}
+			}
+
+			auto atan_v = spook::atan(y / x);
+
+			if (!spook::signbit(x)) {
+				return atan_v;
+			}
+
+			if (spook::signbit(y)) {
+				return atan_v - spook::constant::π<T>;
+			}
+
+			return atan_v + spook::constant::π<T>;
 		}
 
 		template<typename T>

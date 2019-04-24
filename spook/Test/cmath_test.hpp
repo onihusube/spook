@@ -133,11 +133,6 @@ namespace spook_test::cmath {
 			constexpr auto r = spook::remainder(3.5, 2.0);
 		}
 
-		TEST_METHOD(fabs_test) {
-			constexpr auto r = spook::fmod(3.5, 2.0);
-
-		}
-
 		TEST_METHOD(sin_test) {
 			using namespace spook::constant;
 
@@ -389,6 +384,63 @@ namespace spook_test::cmath {
 			}
 		}
 
+		TEST_METHOD(atan2_test) {
+			{
+				auto expected = std::atan2(0.0, 1.0);
+				constexpr auto calc = spook::atan2(0.0, 1.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::atan2(1.0, 1.0);
+				constexpr auto calc = spook::atan2(1.0, 1.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::atan2(1.0, 0.0);
+				constexpr auto calc = spook::atan2(1.0, 0.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::atan2(1.0, -1.0);
+				constexpr auto calc = spook::atan2(1.0, -1.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::atan2(0.0, -1.0);
+				constexpr auto calc = spook::atan2(0.0, -1.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::atan2(-1.0, -1.0);
+				constexpr auto calc = spook::atan2(-1.0, -1.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::atan2(-1.0, 0.0);
+				constexpr auto calc = spook::atan2(-1.0, 0.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::atan2(-1.0, 1.0);
+				constexpr auto calc = spook::atan2(-1.0, 1.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+		}
 
 		TEST_METHOD(exp_test) {
 
