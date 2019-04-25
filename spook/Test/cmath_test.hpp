@@ -306,6 +306,12 @@ namespace spook_test::cmath {
 			}
 		}
 
+		TEST_METHOD(tan_test) {
+			using namespace spook::constant;
+
+			constexpr auto t = spook::tan(π<> / 2.1);
+		}
+
 		TEST_METHOD(asin_test) {
 			constexpr auto as = spook::asin(0.5);
 			//constexpr auto ac = spook::acos(-1.0);
@@ -445,6 +451,12 @@ namespace spook_test::cmath {
 		TEST_METHOD(exp_test) {
 
 			constexpr auto e = spook::exp(1.0);
+		}
+
+
+		TEST_METHOD(sqrt_test) {
+
+			auto s = spook::sqrt(2.0);
 		}
 	};
 }

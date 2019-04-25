@@ -31,9 +31,12 @@ namespace spook {
 	inline namespace cmath {
 		inline namespace constant {
 
+			template<typename T = double>
+			inline constexpr T π = T(3.1415926535897932384626433832795L);
+
 
 			template<typename T = double>
-			inline T constexpr π = T(3.1415926535897932384626433832795);
+			inline constexpr T e = T(2.718281828459045235360287471352L);
 		}
 
 		inline namespace literals {
@@ -111,6 +114,7 @@ namespace spook {
 
 			//can't detect NaN's sign, for compile time...
 			//std::bit_cast()...!?
+
 
 			return x < T(0.0);
 		}
@@ -299,7 +303,7 @@ namespace spook {
 
 			auto tan = sin_v / cos_v;
 
-			return spook::signbit(arg) ? -tan : tan;
+			return spook::copysign(arg, tan);
 		}
 		
 		template<typename T>
@@ -432,14 +436,17 @@ namespace spook {
 		SPOOK_CONSTEVAL auto exp(T arg) -> T {
 			if (spook::numeric_limits_traits<T>::is_iec559) {
 				if (arg == T(0.0)) return T(1.0);
-				if (isinf(arg)) {
-					if (arg < T(0.0)) return T(+0.0);
+				if (spook::isinf(arg)) {
+					if (spook::signbit(arg)) return T(+0.0);
 					return arg;
 				}
 			}
-
+			
 			//0 < x の範囲で計算
 			T x = spook::signbit(arg)? -arg : arg;
+
+			if (x == T(1.0)) return spook::signbit(arg) ? (1.0 / constant::e<T>) : constant::e<T>;
+
 			T series = T(1.0);
 			T tmp = T(1.0);
 			T n = T(1.0);
@@ -459,5 +466,29 @@ namespace spook {
 			return spook::signbit(arg) ? (1.0 / series) : series;
 		}
 
+		template<typename T>
+		SPOOK_CONSTEVAL auto sqrt(T x) -> T {
+
+			//T init = x / T(2.0);
+
+			T h{};
+			T xn = x;
+			T tmp{};
+
+			do {
+				h = T(1.0) - x * xn * xn;
+				tmp = (T(1.0) + h * (T(0.5) + T(3.0 / 8.0) * h));
+				//tmp = xn * (T(1.0) + h * (T(0.5) + h * (T(3.0 / 8.0) + h * (T(5.0 / 16.0) + h * (T(35.0 / 128.0) + h * T(63.0 / 256.0))))));
+				xn *= tmp;
+			} while (spook::fabs(tmp) >= spook::numeric_limits_traits<T>::epsilon());
+
+			return x * xn;
+		}
+
+
+		//template<size_t N, typename T>
+		//SPOOK_CONSTEVAL auto n_root(T x) -> T {
+		//	auto f = [x](auto y) {return y * x - N; };
+		//}
 	}
 }
