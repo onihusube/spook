@@ -466,29 +466,43 @@ namespace spook {
 			return spook::signbit(arg) ? (1.0 / series) : series;
 		}
 
-		template<typename T>
-		SPOOK_CONSTEVAL auto sqrt(T x) -> T {
+		template<size_t N, typename T>
+		SPOOK_CONSTEVAL auto n_root(T x) -> T {
+			if (spook::signbit(x)) return spook::numeric_limits_traits<T>::quiet_NaN();
 
-			//T init = x / T(2.0);
+			const T c1 = T(N + 1) / T(N);
+			const T c2 = -x / T(N);
 
-			T h{};
-			T xn = x;
-			T tmp{};
+			//初期値依存が激しいので考察の余地あり
+			T xk = T(1.0) / x;
+			T x_prev{};
+
+			auto power = [](auto x, size_t n = N) constexpr -> T {
+				T xp = x;
+				for (size_t i = 1; i < n; ++i) {
+					xp *= x;
+				}
+
+				return xp;
+			};
 
 			do {
-				h = T(1.0) - x * xn * xn;
-				tmp = (T(1.0) + h * (T(0.5) + T(3.0 / 8.0) * h));
-				//tmp = xn * (T(1.0) + h * (T(0.5) + h * (T(3.0 / 8.0) + h * (T(5.0 / 16.0) + h * (T(35.0 / 128.0) + h * T(63.0 / 256.0))))));
-				xn *= tmp;
-			} while (spook::fabs(tmp) >= spook::numeric_limits_traits<T>::epsilon());
+				x_prev = xk;
+				xk *= (c1 + c2 * power(xk));
+				if (spook::isinf(xk)) break;
+			} while (spook::fabs(xk - x_prev) >= spook::numeric_limits_traits<T>::epsilon());
 
-			return x * xn;
+			return spook::fabs(x * power(xk, N - 1));
 		}
 
+		template<typename T>
+		SPOOK_CONSTEVAL auto sqrt(T x) -> T {
+			return n_root<2>(x);
+		}
 
-		//template<size_t N, typename T>
-		//SPOOK_CONSTEVAL auto n_root(T x) -> T {
-		//	auto f = [x](auto y) {return y * x - N; };
-		//}
+		template<typename T>
+		SPOOK_CONSTEVAL auto cbrt(T x) -> T {
+			return n_root<3>(x);
+		}
 	}
 }

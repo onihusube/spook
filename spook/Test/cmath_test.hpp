@@ -456,7 +456,7 @@ namespace spook_test::cmath {
 
 		TEST_METHOD(sqrt_test) {
 
-			auto s = spook::sqrt(2.0);
+			auto s = spook::n_root<2>(2.0);
 		}
 	};
 }
