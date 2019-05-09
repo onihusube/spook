@@ -454,9 +454,14 @@ namespace spook_test::cmath {
 		}
 
 
+		TEST_METHOD(pow_test) {
+			constexpr auto p = spook::pow(10.0, -5);
+		}
+
+
 		TEST_METHOD(sqrt_test) {
 
-			auto s = spook::n_root<2>(2.0);
+			//constexpr auto s = spook::sqrt(2.0);
 		}
 	};
 }

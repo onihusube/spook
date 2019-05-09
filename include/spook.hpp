@@ -466,6 +466,55 @@ namespace spook {
 			return spook::signbit(arg) ? (1.0 / series) : series;
 		}
 
+		namespace detail {
+
+			/**
+			* @brief 再帰的に2の累乗回の累乗を計算し、それらを適切に掛けることで掛け算回数を減らす
+			* @param x 2の累乗回かけてあるx
+			* @param prev_n 一つ前の冪の数（2の倍数
+			* @param pow_n 掛けるべき回数、関数が戻った後は残りの掛けるべき回数へ変化する
+			* @return 適切な回数かけられた途中結果
+			*/
+			template<typename T>
+			SPOOK_CONSTEVAL auto pow_impl(T x, std::size_t prev_n, std::size_t& pow_n) -> T {
+				//現在のかけた回数
+				std::size_t now_n = prev_n + prev_n;
+
+				if (now_n <= pow_n) {
+					//x^2を計算し、次へ
+					auto powx = pow_impl(x*x, now_n, pow_n);
+					//終わったら、残りのかける回数を調べて必要ならかけて返す
+					if (prev_n <= pow_n) {
+						pow_n -= prev_n;
+						powx *= x;
+					}
+					return powx;
+				}
+				else {
+					//掛けるべき回数を超えた時は一つ前の結果を最大として戻る
+					pow_n -= prev_n;
+					return x;
+				}
+			}
+		}
+
+		template<typename T, typename N, std::enable_if_t<std::is_integral_v<N>, std::nullptr_t> = nullptr>
+		SPOOK_CONSTEVAL auto pow(T x, N y) -> T {
+			//0 < nの所で計算
+			std::size_t n = spook::fabs(y);
+
+			if (n == 0) return T(1.0);
+			if (n == 1) return spook::signbit(y) ? T(1.0) / x : x;
+
+			auto x_pow_y = detail::pow_impl(x*x, 2, n);
+
+			//奇数乗の時
+			if (n == 1) x_pow_y *= x;
+
+			//負の冪なら逆数へ
+			return spook::signbit(y) ? T(1.0) / x_pow_y : x_pow_y;
+		}
+
 		template<size_t N, typename T>
 		SPOOK_CONSTEVAL auto n_root(T x) -> T {
 			if (spook::signbit(x)) return spook::numeric_limits_traits<T>::quiet_NaN();
