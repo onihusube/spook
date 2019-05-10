@@ -450,7 +450,12 @@ namespace spook_test::cmath {
 
 		TEST_METHOD(exp_test) {
 
-			constexpr auto e = spook::exp(1.0);
+			constexpr auto e = spook::exp(3.2);
+		}
+
+		TEST_METHOD(log_test) {
+
+			constexpr auto l1 = spook::log(2.5);
 		}
 
 
@@ -460,8 +465,179 @@ namespace spook_test::cmath {
 
 
 		TEST_METHOD(sqrt_test) {
+			//intelisenseが死ぬので
+#ifndef __EDG__
+			{
+				constexpr auto calc = spook::sqrt(-2.0);
 
-			//constexpr auto s = spook::sqrt(2.0);
+				Assert::IsTrue(spook::isnan(calc));
+			}
+
+			{
+				auto expected = std::sqrt(2.0);
+				constexpr auto calc = spook::sqrt(2.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::sqrt(3.0);
+				constexpr auto calc = spook::sqrt(3.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::sqrt(4.0);
+				constexpr auto calc = spook::sqrt(4.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::sqrt(8.0);
+				constexpr auto calc = spook::sqrt(8.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::sqrt(16.0);
+				constexpr auto calc = spook::sqrt(16.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::sqrt(32.0);
+				constexpr auto calc = spook::sqrt(32.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::sqrt(64.0);
+				constexpr auto calc = spook::sqrt(64.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::sqrt(128.0);
+				constexpr auto calc = spook::sqrt(128.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-14);
+			}
+
+			{
+				auto expected = std::sqrt(256.0);
+				constexpr auto calc = spook::sqrt(256.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-14);
+			}
+
+			{
+				auto expected = std::sqrt(512.0);
+				constexpr auto calc = spook::sqrt(512.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-14);
+			}
+
+			{
+				auto expected = std::sqrt(1024.0);
+				constexpr auto calc = spook::sqrt(1024.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-14);
+			}
+#endif
+		}
+
+		TEST_METHOD(cbrt_test) {
+			//intelisenseが死ぬので
+#ifndef __EDG__
+			{
+				constexpr auto calc = spook::cbrt(-2.0);
+
+				Assert::IsTrue(spook::isnan(calc));
+			}
+
+			{
+				auto expected = std::cbrt(2.0);
+				constexpr auto calc = spook::cbrt(2.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::cbrt(3.0);
+				constexpr auto calc = spook::cbrt(3.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::cbrt(4.0);
+				constexpr auto calc = spook::cbrt(4.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::cbrt(8.0);
+				constexpr auto calc = spook::cbrt(8.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::cbrt(16.0);
+				constexpr auto calc = spook::cbrt(16.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::cbrt(32.0);
+				constexpr auto calc = spook::cbrt(32.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::cbrt(64.0);
+				constexpr auto calc = spook::cbrt(64.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-15);
+			}
+
+			{
+				auto expected = std::cbrt(128.0);
+				constexpr auto calc = spook::cbrt(128.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-14);
+			}
+
+			{
+				auto expected = std::cbrt(256.0);
+				constexpr auto calc = spook::cbrt(256.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-14);
+			}
+
+			{
+				auto expected = std::cbrt(512.0);
+				constexpr auto calc = spook::cbrt(512.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-14);
+			}
+
+			{
+				auto expected = std::cbrt(1024.0);
+				constexpr auto calc = spook::cbrt(1024.0);
+
+				Assert::AreEqual(expected, calc, 1.0E-14);
+			}
+#endif
 		}
 	};
 }

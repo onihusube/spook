@@ -26,6 +26,29 @@ namespace spook {
 	struct numeric_limits_traits : public std::numeric_limits<T> {};
 }
 
+namespace spook {
+	inline namespace type_traits {
+
+		template<typename... Ts>
+		using enabler = std::enable_if_t<std::conjunction_v<Ts...>, std::nullptr_t>;
+
+		template<typename... Ts>
+		using disabler = std::enable_if_t<!std::conjunction_v<Ts...>, std::nullptr_t>;
+
+		/**
+		* @brief 整数型でない型がmake_unsigned_tに入力されると型名としてill-formedになるのでその対策に構造体内に埋め込んで表面に出ないようにしている
+		*/
+		template<typename T>
+		struct check_unsigned : std::is_same<T, std::make_unsigned_t<T>> {};
+
+		template<typename T>
+		using is_unsigned = std::conjunction<
+			std::is_integral<T>, 
+			std::disjunction< std::is_same<T, std::size_t>, check_unsigned<T> >
+		>;
+
+	}
+}
 
 namespace spook {
 	inline namespace cmath {
@@ -95,7 +118,7 @@ namespace spook {
 			return x == T(0.0);
 		}
 
-		template<typename T>
+		template<typename T, spook::disabler<spook::is_unsigned<T>> = nullptr>
 		SPOOK_CONSTEVAL auto fabs(T x) -> T {
 			if (spook::numeric_limits_traits<T>::is_iec559) {
 				if (x == 0.0) return T(+0.0);
@@ -103,6 +126,11 @@ namespace spook {
 
 			return spook::signbit(x) ? -x : x;
 			//return (x < 0.0) ? (-x) : (x);
+		}
+
+		template<typename T, spook::enabler<std::is_unsigned<T>> = nullptr>
+		SPOOK_CONSTEVAL auto fabs(T x) -> T {
+			return x;
 		}
 
 		template<typename T>
@@ -432,6 +460,19 @@ namespace spook {
 			return atan_v + spook::constant::π<T>;
 		}
 
+		namespace detail {
+
+			/**
+			* @brief 入力が整数であるとわかっているときのためのexp
+			* @param arg e^argのarg、整数であること
+			* @return e^argを返す、近似計算ではない
+			*/
+			template<typename T>
+			SPOOK_CONSTEVAL auto simple_exp(T arg) -> T {
+				return spook::pow(constant::e<T>, size_t(arg));
+			}
+		}
+
 		template<typename T>
 		SPOOK_CONSTEVAL auto exp(T arg) -> T {
 			if (spook::numeric_limits_traits<T>::is_iec559) {
@@ -446,6 +487,18 @@ namespace spook {
 			T x = spook::signbit(arg)? -arg : arg;
 
 			if (x == T(1.0)) return spook::signbit(arg) ? (1.0 / constant::e<T>) : constant::e<T>;
+
+			//1 < xのとき
+			if (1.0 < x) {
+				//小数点未満の部分とそれ以外の部分に分ける
+				T x1 = spook::floor(x);
+				T x2 = x - x1;
+
+				//それぞれのexpをかけて計算
+				T expx = spook::exp(x2) * detail::simple_exp(x1);
+
+				return spook::signbit(arg) ? (1.0 / expx) : expx;
+			}
 
 			T series = T(1.0);
 			T tmp = T(1.0);
@@ -464,6 +517,33 @@ namespace spook {
 
 			//適正な値へ
 			return spook::signbit(arg) ? (1.0 / series) : series;
+		}
+
+
+		template<typename T>
+		SPOOK_CONSTEVAL auto log(T x) -> T {
+
+			T series = (x - 1) / (x + 1);
+			T tmp = series;
+			T k = T(3.0);
+			T term{};
+			T r{};  //積み残し
+			T t{};  //級数和の一時変数
+			const T sq = series * series;
+
+			//マクローリン級数の計算
+			do {
+				tmp *= sq;
+				term = tmp / k;
+
+				t = series + (term + r);
+				r = (term + r) - (t - series);
+				series = t;
+
+				k += T(2.0);
+			} while (spook::fabs(term) >= spook::numeric_limits_traits<T>::epsilon());
+
+			return series + series;
 		}
 
 		namespace detail {
@@ -498,7 +578,7 @@ namespace spook {
 			}
 		}
 
-		template<typename T, typename N, std::enable_if_t<std::is_integral_v<N>, std::nullptr_t> = nullptr>
+		template<typename T, typename N, spook::enabler<std::is_integral<N>> = nullptr>
 		SPOOK_CONSTEVAL auto pow(T x, N y) -> T {
 			//0 < nの所で計算
 			std::size_t n = spook::fabs(y);
@@ -526,22 +606,13 @@ namespace spook {
 			T xk = T(1.0) / x;
 			T x_prev{};
 
-			auto power = [](auto x, size_t n = N) constexpr -> T {
-				T xp = x;
-				for (size_t i = 1; i < n; ++i) {
-					xp *= x;
-				}
-
-				return xp;
-			};
-
 			do {
 				x_prev = xk;
-				xk *= (c1 + c2 * power(xk));
+				xk *= (c1 + c2 * spook::pow(xk, N));
 				if (spook::isinf(xk)) break;
 			} while (spook::fabs(xk - x_prev) >= spook::numeric_limits_traits<T>::epsilon());
 
-			return spook::fabs(x * power(xk, N - 1));
+			return spook::fabs(x * spook::pow(xk, N - 1));
 		}
 
 		template<typename T>
