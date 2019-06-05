@@ -10,4 +10,4 @@ Immediate function is consteval function on C++20.
 - no undefined behavior
 - no supported compiler
 
-To use it, include "include / spook.h".
+To use it, `#include "include/spook.h"`.
