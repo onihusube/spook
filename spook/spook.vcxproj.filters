@@ -35,6 +35,9 @@
     <ClInclude Include="Test\cmath_test.hpp">
       <Filter>Test</Filter>
     </ClInclude>
+    <ClInclude Include="Test\functional_test.hpp">
+      <Filter>Test</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

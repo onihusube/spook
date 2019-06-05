@@ -176,6 +176,7 @@
     <ClInclude Include="..\include\spook.hpp" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Test\cmath_test.hpp" />
+    <ClInclude Include="Test\functional_test.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

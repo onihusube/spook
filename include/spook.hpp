@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <utility>
+#include <type_traits>
 
 #define SPOOK_NOT_USE_CONSTEVAL
 
@@ -29,9 +30,15 @@ namespace spook {
 namespace spook {
 	inline namespace type_traits {
 
+		/**
+		* @brief 条件が全てtrueの時に有効化
+		*/
 		template<typename... Ts>
 		using enabler = std::enable_if_t<std::conjunction_v<Ts...>, std::nullptr_t>;
 
+		/**
+		* @brief 条件が全てtrueの時に無効化
+		*/
 		template<typename... Ts>
 		using disabler = std::enable_if_t<!std::conjunction_v<Ts...>, std::nullptr_t>;
 
@@ -47,6 +54,47 @@ namespace spook {
 			std::disjunction< std::is_same<T, std::size_t>, check_unsigned<T> >
 		>;
 
+		/**
+		* @brief あるメンバポインタがある型のメンバを指すものであるかを調べる
+		* @tparam MemberPtr メンバポインタ
+		* @tparam T MemberPtrによって指されるクラスかを調べる型
+		*/
+		template<typename MemberPtr, typename T>
+		struct is_member_of : std::false_type {};
+
+		template<typename T, typename R, typename... Args>
+		struct is_member_of<R(T::*)(Args...), T> : std::true_type {};
+
+		template<typename T, typename U>
+		struct is_member_of<U T::*, T> : std::true_type {};
+
+		template<typename MemberPtr, typename T>
+		using is_member_of_decay = is_member_of<std::remove_cvref_t<MemberPtr>, std::remove_cvref_t<T>>;
+
+
+		/**
+		* @brief あるメンバポインタから属する型を取り出す
+		* @tparam MemberPtr メンバポインタ
+		*/
+		template<typename MemberPtr>
+		struct memberptr_to;
+
+		template<typename T, typename R, typename... Args>
+		struct memberptr_to<R(T::*)(Args...)> {
+			using type = T;
+		};
+
+		template<typename T, typename U>
+		struct memberptr_to<U T::*> {
+			using type = T;
+		};
+
+		/**
+		* @brief あるメンバポインタから属する型を取り出す
+		* @tparam MemberPtr メンバポインタ
+		*/
+		template<typename MemberPtr>
+		using memberptr_to_t = typename memberptr_to<std::remove_cvref_t<MemberPtr>>::type;
 	}
 }
 
@@ -623,6 +671,52 @@ namespace spook {
 		template<typename T>
 		SPOOK_CONSTEVAL auto cbrt(T x) -> T {
 			return n_root<3>(x);
+		}
+	}
+
+	inline namespace functional {
+
+		namespace detail {
+
+			template<typename F, typename T, typename... Args, enabler<std::is_base_of<memberptr_to_t<F>, std::remove_cvref_t<T>>, is_member_of_decay<F, T>> = nullptr>
+			SPOOK_CONSTEVAL auto invoke_memfn(F&& f, T&& t1, Args&&... args) {
+				return (std::forward<T>(t1).*f)(std::forward<Args>(args)...);
+			}
+
+			template<typename F, typename T, typename... Args, disabler<std::is_base_of<memberptr_to_t<F>, std::remove_cvref_t<T>>, is_member_of_decay<F, T>> = nullptr>
+			SPOOK_CONSTEVAL auto invoke_memfn(F&& f, T&& t1, Args&&... args) {
+				return ((*std::forward<T>(t1)).*f)(std::forward<Args>(args)...);
+			}
+
+			template<typename F, typename T, enabler<std::is_base_of<memberptr_to_t<F>, std::remove_cvref_t<T>>, is_member_of_decay<F, T>> = nullptr>
+			SPOOK_CONSTEVAL auto invoke_memobj(F&& f, T&& t1) {
+				return (std::forward<T>(t1).*f);
+			}
+
+			template<typename F, typename T, disabler<std::is_base_of<memberptr_to_t<F>, std::remove_cvref_t<T>>, is_member_of_decay<F, T>> = nullptr>
+			SPOOK_CONSTEVAL auto invoke_memobj(F&& f, T&& t1) {
+				return ((*std::forward<T>(t1)).*f);
+			}
+
+			template<typename F, typename... Args, enabler<std::is_member_function_pointer<std::remove_cvref_t<F>>> = nullptr, disabler<std::is_member_object_pointer<std::remove_cvref_t<F>>> = nullptr>
+			SPOOK_CONSTEVAL auto invoke_impl(F&& f, Args&&... args) {
+				return invoke_memfn(std::forward<F>(f), std::forward<Args>(args)...);
+			}
+
+			template<typename F, typename Arg, enabler<std::is_member_object_pointer<std::remove_cvref_t<F>>> = nullptr, disabler<std::is_member_function_pointer<std::remove_cvref_t<F>>> = nullptr>
+			SPOOK_CONSTEVAL auto invoke_impl(F&& f, Arg&& arg) {
+				return invoke_memobj(std::forward<F>(f), std::forward<Arg>(arg));
+			}
+
+			template<typename F, typename... Args, disabler<std::is_member_pointer<std::remove_cvref_t<F>>> = nullptr>
+			SPOOK_CONSTEVAL auto invoke_impl(F&& f, Args&&... args) {
+				return std::forward<F>(f)(std::forward<Args>(args)...);
+			}
+		}
+
+		template<typename F, typename... Args>
+		SPOOK_CONSTEVAL auto invoke(F&& f, Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>) -> std::invoke_result_t<F, Args...> {
+			return detail::invoke_impl(std::forward<F>(f), std::forward<Args>(args)...);
 		}
 	}
 }

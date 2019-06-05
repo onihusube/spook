@@ -11,6 +11,7 @@
 
 #include <limits>
 #include <cmath>
+#include <type_traits>
 
 #include "CppUnitTest.h"
 
