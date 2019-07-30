@@ -3,6 +3,7 @@
 #include <limits>
 #include <utility>
 #include <type_traits>
+#include <cstdint>
 
 #define SPOOK_NOT_USE_CONSTEVAL
 
@@ -246,20 +247,39 @@ namespace spook {
 			}
 		}
 
+		template<typename T, spook::disabler<std::is_integral<T>> = nullptr>
+		SPOOK_CONSTEVAL auto round_to_nearest(T x) -> T {
+			//ゼロ方向へ丸める
+			auto rounded = spook::trunc(x);
+			//少数部の絶対値を取り出す
+			auto decimal = spook::fabs(x - rounded);
+			
+			if (decimal == T(0.5)) {
+				if ((std::int64_t(rounded) & 1) == std::int64_t(1)) {
+					//偶数方向へ丸める
+					return spook::signbit(rounded) ? --rounded : ++rounded;
+				}
+			}
+			else if (T(0.5) < decimal) {
+				//ゼロ方向へ丸められているので反対向きに1つ増やす
+				return spook::signbit(rounded) ? --rounded : ++rounded;
+			}
+
+			return rounded;
+		}
+
 		template<typename T>
 		SPOOK_CONSTEVAL auto remainder(T x, T y) -> T {
-			auto n = spook::trunc(x / y);
+			auto n = spook::round_to_nearest(x / y);
 
 			return x - n * y;
 		}
 
 		template<typename T>
 		SPOOK_CONSTEVAL auto fmod(T x, T y) -> T {
-			y = spook::fabs(y);
-			auto r = spook::remainder(spook::fabs(x) , y);
-			if (spook::signbit(r)) r += y;
+			auto n = spook::trunc(x / y);
 
-			return spook::copysign(r, x);
+			return x - n * y;
 		}
 
 		namespace detail {

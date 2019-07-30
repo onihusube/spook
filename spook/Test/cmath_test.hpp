@@ -129,8 +129,24 @@ namespace spook_test::cmath {
 			Assert::IsTrue(-3.0 == spook::trunc(-3.9));
 		}
 
+
+		TEST_METHOD(roud_to_nearest_test) {
+			constexpr auto r = spook::round_to_nearest(-3.5);
+
+			Assert::IsTrue(3.0 == spook::round_to_nearest(3.0));
+			Assert::IsTrue(3.0 == spook::round_to_nearest(3.1));
+			Assert::IsTrue(4.0 == spook::round_to_nearest(3.5));
+			Assert::IsTrue(4.0 == spook::round_to_nearest(3.9));
+
+			Assert::IsTrue(-3.0 == spook::round_to_nearest(-3.0));
+			Assert::IsTrue(-3.0 == spook::round_to_nearest(-3.1));
+			Assert::IsTrue(-4.0 == spook::round_to_nearest(-3.5));
+			Assert::IsTrue(-4.0 == spook::round_to_nearest(-3.9));
+		}
+
 		TEST_METHOD(remainder_test) {
-			constexpr auto r = spook::remainder(3.5, 2.0);
+			constexpr auto r = spook::remainder(3.14, 3.0);
+			constexpr auto f = spook::fmod(3.14, 3.0);
 		}
 
 		TEST_METHOD(sin_test) {
