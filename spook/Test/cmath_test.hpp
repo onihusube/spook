@@ -131,8 +131,6 @@ namespace spook_test::cmath {
 
 
 		TEST_METHOD(roud_to_nearest_test) {
-			constexpr auto r = spook::round_to_nearest(-3.5);
-
 			Assert::IsTrue(3.0 == spook::round_to_nearest(3.0));
 			Assert::IsTrue(3.0 == spook::round_to_nearest(3.1));
 			Assert::IsTrue(4.0 == spook::round_to_nearest(3.5));
@@ -145,8 +143,89 @@ namespace spook_test::cmath {
 		}
 
 		TEST_METHOD(remainder_test) {
-			constexpr auto r = spook::remainder(3.14, 3.0);
-			constexpr auto f = spook::fmod(3.14, 3.0);
+			{
+				auto expected = std::remainder(3.14, 3.0);
+				constexpr auto r = spook::remainder(3.14, 3.0);
+				Assert::AreEqual(expected, r, 1.0E-15);
+			}
+			{
+				auto expected = std::remainder(5.0, 2.0);
+				constexpr auto r = spook::remainder(5.0, 2.0);
+				Assert::AreEqual(expected, r, 1.0E-15);
+			}
+			{
+				auto expected = std::remainder(6.0, 4.0);
+				constexpr auto r = spook::remainder(6.0, 4.0);
+				Assert::AreEqual(expected, r, 1.0E-15);
+			}
+			{
+				auto expected = std::remainder(6.3, 3.0);
+				constexpr auto r = spook::remainder(6.3, 3.0);
+				Assert::AreEqual(expected, r, 1.0E-15);
+			}
+			{
+				auto expected = std::remainder(6.3, -3.0);
+				constexpr auto r = spook::remainder(6.3, -3.0);
+				Assert::AreEqual(expected, r, 1.0E-15);
+			}
+			{
+				auto expected = std::remainder(-6.3, 3.0);
+				constexpr auto r = spook::remainder(-6.3, 3.0);
+				Assert::AreEqual(expected, r, 1.0E-15);
+			}
+			{
+				auto expected = std::remainder(6.3, 3.15);
+				constexpr auto r = spook::remainder(6.3, 3.15);
+				Assert::AreEqual(expected, r, 1.0E-15);
+			}
+			{
+				auto expected = std::remainder(6.0, 2.0);
+				constexpr auto r = spook::remainder(6.0, 2.0);
+				Assert::AreEqual(expected, r, 1.0E-15);
+			}
+		}
+
+		TEST_METHOD(fmod_test) {
+			{
+				auto expected = std::fmod(3.14, 3.0);
+				constexpr auto r = spook::fmod(3.14, 3.0);
+				Assert::AreEqual(expected, r, 1.0E-15);
+			}
+			{
+				auto expected = std::fmod(5.0, 2.0);
+				constexpr auto r = spook::fmod(5.0, 2.0);
+				Assert::AreEqual(expected, r, 1.0E-15);
+			}
+			{
+				auto expected = std::fmod(6.0, 4.0);
+				constexpr auto r = spook::fmod(6.0, 4.0);
+				Assert::AreEqual(expected, r, 1.0E-15);
+			}
+			{
+				auto expected = std::fmod(6.3, 3.0);
+				constexpr auto r = spook::fmod(6.3, 3.0);
+				Assert::AreEqual(expected, r, 1.0E-15);
+			}
+			{
+				auto expected = std::fmod(6.3, -3.0);
+				constexpr auto r = spook::fmod(6.3, -3.0);
+				Assert::AreEqual(expected, r, 1.0E-15);
+			}
+			{
+				auto expected = std::fmod(-6.3, 3.0);
+				constexpr auto r = spook::fmod(-6.3, 3.0);
+				Assert::AreEqual(expected, r, 1.0E-15);
+			}
+			{
+				auto expected = std::fmod(6.3, 3.15);
+				constexpr auto r = spook::fmod(6.3, 3.15);
+				Assert::AreEqual(expected, r, 1.0E-15);
+			}
+			{
+				auto expected = std::fmod(6.0, 2.0);
+				constexpr auto r = spook::fmod(6.0, 2.0);
+				Assert::AreEqual(expected, r, 1.0E-15);
+			}
 		}
 
 		TEST_METHOD(sin_test) {

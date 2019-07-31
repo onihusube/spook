@@ -270,6 +270,12 @@ namespace spook {
 
 		template<typename T>
 		SPOOK_CONSTEVAL auto remainder(T x, T y) -> T {
+			if (spook::numeric_limits_traits<T>::is_iec559) {
+				if (spook::iszero(y) || spook::isinf(x) || spook::isnan(x) || spook::isnan(y)) {
+					return spook::numeric_limits_traits<T>::quiet_NaN();
+				}
+			}
+
 			auto n = spook::round_to_nearest(x / y);
 
 			return x - n * y;
@@ -277,6 +283,19 @@ namespace spook {
 
 		template<typename T>
 		SPOOK_CONSTEVAL auto fmod(T x, T y) -> T {
+			if (spook::numeric_limits_traits<T>::is_iec559) {
+				bool y_is_zero = spook::iszero(y);
+
+				if (!y_is_zero && spook::iszero(x)) return x;
+				if (spook::isinf(x) || y_is_zero || spook::isnan(x) || spook::isnan(y)) {
+					return spook::numeric_limits_traits<T>::quiet_NaN();
+				}
+				else {
+					//xが有限であり、yが±∞であるとき
+					if (spook::isinf(y)) return x;
+				}
+			}
+
 			auto n = spook::trunc(x / y);
 
 			return x - n * y;
@@ -446,7 +465,7 @@ namespace spook {
 		SPOOK_CONSTEVAL auto atan(T arg) -> T {
 			if (spook::numeric_limits_traits<T>::is_iec559) {
 				if (arg == T(0.0)) return T(1.0);
-				if (isinf(arg)) return spook::copysign(spook::constant::π<T> / 2.0, arg);
+				if (spook::isinf(arg)) return spook::copysign(spook::constant::π<T> / 2.0, arg);
 			}
 
 			//0 < x の所で計算
