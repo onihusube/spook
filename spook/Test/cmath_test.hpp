@@ -36,6 +36,23 @@ namespace spook_test::cmath {
 			Assert::IsFalse(spook::isnan(std::numeric_limits<double>::lowest()));
 		}
 
+		TEST_METHOD(isfinite_test) {
+			constexpr auto nan = std::numeric_limits<double>::quiet_NaN();
+			constexpr auto inf = std::numeric_limits<double>::infinity();
+
+			constexpr auto b = spook::isfinite(nan);
+			static_assert(b == false);
+
+			Assert::IsFalse(spook::isfinite(nan));
+			Assert::IsFalse(spook::isfinite(inf));
+			Assert::IsFalse(spook::isfinite(-inf));
+
+			Assert::IsTrue(spook::isfinite(0.0));
+			Assert::IsTrue(spook::isfinite(-0.0));
+			Assert::IsTrue(spook::isfinite((std::numeric_limits<double>::max)()));
+			Assert::IsTrue(spook::isfinite(std::numeric_limits<double>::lowest()));
+		}
+
 		TEST_METHOD(fabs_test) {
 			constexpr auto p_inf = std::numeric_limits<double>::infinity();
 
@@ -733,6 +750,26 @@ namespace spook_test::cmath {
 				Assert::AreEqual(expected, calc, 1.0E-14);
 			}
 #endif
+		}
+
+		TEST_METHOD(lerp_test) {
+			constexpr double start = 0.0;
+			constexpr double end = 10.0;
+
+			Assert::AreEqual(0.0, spook::lerp(start, end, 0.0), 1.0E-14);
+			Assert::AreEqual(1.0, spook::lerp(start, end, 0.1), 1.0E-14);
+			Assert::AreEqual(2.0, spook::lerp(start, end, 0.2), 1.0E-14);
+			Assert::AreEqual(3.0, spook::lerp(start, end, 0.3), 1.0E-14);
+			Assert::AreEqual(4.0, spook::lerp(start, end, 0.4), 1.0E-14);
+			Assert::AreEqual(5.0, spook::lerp(start, end, 0.5), 1.0E-14);
+			Assert::AreEqual(6.0, spook::lerp(start, end, 0.6), 1.0E-14);
+			Assert::AreEqual(7.0, spook::lerp(start, end, 0.7), 1.0E-14);
+			Assert::AreEqual(8.0, spook::lerp(start, end, 0.8), 1.0E-14);
+			Assert::AreEqual(9.0, spook::lerp(start, end, 0.9), 1.0E-14);
+			Assert::AreEqual(10.0, spook::lerp(start, end, 1.0), 1.0E-14);
+			Assert::AreEqual(15.0, spook::lerp(start, end, 1.5), 1.0E-14);
+			Assert::AreEqual(20.0, spook::lerp(start, end, 2.0), 1.0E-14);
+
 		}
 	};
 }

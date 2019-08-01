@@ -163,6 +163,14 @@ namespace spook {
 		}
 
 		template<typename T>
+		SPOOK_CONSTEVAL auto isfinite(T x) -> bool {
+			if (spook::isinf(x)) return false;
+			if (spook::isnan(x)) return false;
+
+			return true;
+		}
+
+		template<typename T>
 		SPOOK_CONSTEVAL auto iszero(T x) -> bool {
 			return x == T(0.0);
 		}
@@ -710,6 +718,15 @@ namespace spook {
 		template<typename T>
 		SPOOK_CONSTEVAL auto cbrt(T x) -> T {
 			return n_root<3>(x);
+		}
+
+		template<typename T>
+		SPOOK_CONSTEVAL auto lerp(T a, T b, T t) -> T {
+			if (spook::iszero(t)) return a;
+			if (t == T(1.0)) return b;
+			if (spook::isfinite(t) && a == b) return a;
+
+			return a + t * (b - a);
 		}
 	}
 
