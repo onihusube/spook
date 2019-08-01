@@ -53,6 +53,27 @@ namespace spook_test::cmath {
 			Assert::IsTrue(spook::isfinite(std::numeric_limits<double>::lowest()));
 		}
 
+		TEST_METHOD(isnormal_test) {
+			constexpr auto nan = std::numeric_limits<double>::quiet_NaN();
+			constexpr auto inf = std::numeric_limits<double>::infinity();
+			constexpr auto denorm = 0x1p-1033;
+
+			constexpr bool isde = spook::isnormal(denorm);
+			
+			Assert::IsFalse(spook::isnormal(nan));
+			Assert::IsFalse(spook::isnormal(inf));
+			Assert::IsFalse(spook::isnormal(-inf));
+			Assert::IsFalse(spook::isnormal(0.0));
+			Assert::IsFalse(spook::isnormal(-0.0));
+			Assert::IsFalse(spook::isnormal(denorm));
+			Assert::IsFalse(spook::isnormal(-denorm));
+
+			Assert::IsTrue(spook::isnormal(1.0));
+			Assert::IsTrue(spook::isnormal(-2.0));
+			Assert::IsTrue(spook::isnormal((std::numeric_limits<double>::max)()));
+			Assert::IsTrue(spook::isnormal(std::numeric_limits<double>::lowest()));
+		}
+
 		TEST_METHOD(fabs_test) {
 			constexpr auto p_inf = std::numeric_limits<double>::infinity();
 
@@ -756,7 +777,7 @@ namespace spook_test::cmath {
 			constexpr double start = 0.0;
 			constexpr double end = 10.0;
 
-			Assert::AreEqual(0.0, spook::lerp(start, end, 0.0), 1.0E-14);
+			Assert::AreEqual(start, spook::lerp(start, end, 0.0), 1.0E-14);
 			Assert::AreEqual(1.0, spook::lerp(start, end, 0.1), 1.0E-14);
 			Assert::AreEqual(2.0, spook::lerp(start, end, 0.2), 1.0E-14);
 			Assert::AreEqual(3.0, spook::lerp(start, end, 0.3), 1.0E-14);
@@ -766,9 +787,11 @@ namespace spook_test::cmath {
 			Assert::AreEqual(7.0, spook::lerp(start, end, 0.7), 1.0E-14);
 			Assert::AreEqual(8.0, spook::lerp(start, end, 0.8), 1.0E-14);
 			Assert::AreEqual(9.0, spook::lerp(start, end, 0.9), 1.0E-14);
-			Assert::AreEqual(10.0, spook::lerp(start, end, 1.0), 1.0E-14);
+			Assert::AreEqual(end, spook::lerp(start, end, 1.0), 1.0E-14);
 			Assert::AreEqual(15.0, spook::lerp(start, end, 1.5), 1.0E-14);
 			Assert::AreEqual(20.0, spook::lerp(start, end, 2.0), 1.0E-14);
+
+			Assert::AreEqual(end, spook::lerp(end, end, 2.0), 1.0E-14);
 
 		}
 	};

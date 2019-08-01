@@ -171,6 +171,16 @@ namespace spook {
 		}
 
 		template<typename T>
+		SPOOK_CONSTEVAL auto isnormal(T x) -> bool {
+			if (spook::iszero(x)) return false;
+			if (spook::isnan(x)) return false;
+			if (spook::isinf(x)) return false;
+			if (spook::fabs(x) < (spook::numeric_limits_traits<T>::min)()) return false;
+
+			return true;
+		}
+
+		template<typename T>
 		SPOOK_CONSTEVAL auto iszero(T x) -> bool {
 			return x == T(0.0);
 		}
