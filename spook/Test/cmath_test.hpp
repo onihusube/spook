@@ -91,6 +91,21 @@ namespace spook_test::cmath {
 			Assert::IsTrue(expect == spook::fabs(+3.141));
 		}
 
+		TEST_METHOD(abs_test) {
+			constexpr auto ullmax = spook::abs((std::numeric_limits<std::size_t>::max)());
+			
+			Assert::IsTrue(0 == spook::abs(std::size_t(0)));
+			Assert::IsTrue(ullmax == spook::abs(ullmax));
+
+			Assert::IsTrue(0 == spook::abs(signed long long(0)));
+
+			constexpr auto sllmin = (std::numeric_limits<signed long long>::min)() + 1;
+			constexpr auto sllmax = (std::numeric_limits<signed long long>::max)();
+
+			Assert::IsTrue(-sllmin == spook::abs(sllmin));
+			Assert::IsTrue(sllmax == spook::abs(sllmax));
+		}
+
 		TEST_METHOD(signbit_test) {
 			Assert::IsTrue(spook::signbit(-1.0));
 			Assert::IsFalse(spook::signbit(1.0));

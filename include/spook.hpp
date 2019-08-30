@@ -185,7 +185,7 @@ namespace spook {
 			return x == T(0.0);
 		}
 
-		template<typename T, spook::disabler<spook::is_unsigned<T>> = nullptr>
+		template<typename T, spook::disabler<std::is_integral<T>> = nullptr>
 		SPOOK_CONSTEVAL auto fabs(T x) -> T {
 			if (spook::numeric_limits_traits<T>::is_iec559) {
 				if (x == 0.0) return T(+0.0);
@@ -195,9 +195,19 @@ namespace spook {
 			//return (x < 0.0) ? (-x) : (x);
 		}
 
-		template<typename T, spook::enabler<std::is_unsigned<T>> = nullptr>
-		SPOOK_CONSTEVAL auto fabs(T x) -> T {
-			return x;
+		template<typename T>
+		SPOOK_CONSTEVAL auto abs(T x) -> T {
+			if constexpr (std::is_floating_point_v<T> == true) {
+				return spook::fabs(x);
+			}
+			if constexpr (std::is_unsigned_v<T> == true) {
+				return x;
+			}
+			else {
+				if (T(0) <= x) return x;
+				//符号付かつ負の値なら2の補数を返す
+				return (~x) + 1;
+			}
 		}
 
 		template<typename T>
@@ -686,7 +696,7 @@ namespace spook {
 		template<typename T, typename N, spook::enabler<std::is_integral<N>> = nullptr>
 		SPOOK_CONSTEVAL auto pow(T x, N y) -> T {
 			//0 < nの所で計算
-			std::size_t n = spook::fabs(y);
+			std::size_t n = spook::abs(y);
 
 			if (n == 0) return T(1.0);
 			if (n == 1) return spook::signbit(y) ? T(1.0) / x : x;
