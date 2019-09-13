@@ -150,7 +150,21 @@ namespace spook {
 			}
 		}
 
-		template<typename T>
+		//前方宣言
+		template <typename T>
+		SPOOK_CONSTEVAL auto signbit(T x) -> bool;
+
+		template <typename T>
+		SPOOK_CONSTEVAL auto fabs(T x) -> T;
+
+		template <typename T>
+		SPOOK_CONSTEVAL auto floor(T x) -> T;
+
+		template <typename T, typename N>
+		SPOOK_CONSTEVAL auto pow(T x, N y) -> T;
+
+
+		template <typename T>
 		SPOOK_CONSTEVAL auto isinf(T x) -> bool {
 			if ((spook::numeric_limits_traits<T>::max)() < x) return true;
 			if (x < spook::numeric_limits_traits<T>::lowest()) return true;
@@ -170,6 +184,11 @@ namespace spook {
 			return true;
 		}
 
+		template <typename T>
+		SPOOK_CONSTEVAL auto iszero(T x) -> bool {
+			return x == T(0.0);
+		}
+
 		template<typename T>
 		SPOOK_CONSTEVAL auto isnormal(T x) -> bool {
 			if (spook::iszero(x)) return false;
@@ -180,15 +199,31 @@ namespace spook {
 			return true;
 		}
 
-		template<typename T>
-		SPOOK_CONSTEVAL auto iszero(T x) -> bool {
-			return x == T(0.0);
+		template <typename T>
+		SPOOK_CONSTEVAL auto signbit(T x) -> bool {
+			//ゼロの符号判定、定数式じゃ無理？
+			//if (x == T(0.0)) {
+			//	return (T(1.0) / x) < 0;
+			//}
+
+			//can't detect NaN's sign, for compile time...
+			//std::bit_cast()...!?
+
+			return x < T(0.0);
+		}
+		template <typename T>
+		SPOOK_CONSTEVAL auto copysign(T x, T y) -> T {
+			auto absv = spook::isnan(x) ? spook::numeric_limits_traits<T>::quiet_NaN() : spook::fabs(x);
+
+			return spook::signbit(y) ? -absv : absv;
 		}
 
-		template<typename T, spook::disabler<std::is_integral<T>> = nullptr>
+		template <typename T, spook::disabler<std::is_integral<T>> = nullptr>
 		SPOOK_CONSTEVAL auto fabs(T x) -> T {
-			if (spook::numeric_limits_traits<T>::is_iec559) {
-				if (x == 0.0) return T(+0.0);
+			if (spook::numeric_limits_traits<T>::is_iec559)
+			{
+				if (x == 0.0)
+					return T(+0.0);
 			}
 
 			return spook::signbit(x) ? -x : x;
@@ -210,28 +245,7 @@ namespace spook {
 			}
 		}
 
-		template<typename T>
-		SPOOK_CONSTEVAL auto signbit(T x) -> bool {
-			//ゼロの符号判定、定数式じゃ無理？
-			//if (x == T(0.0)) {
-			//	return (T(1.0) / x) < 0;
-			//}
-
-			//can't detect NaN's sign, for compile time...
-			//std::bit_cast()...!?
-
-
-			return x < T(0.0);
-		}
-
-		template<typename T>
-		SPOOK_CONSTEVAL auto copysign(T x, T y) -> T {
-			auto absv = spook::isnan(x) ? spook::numeric_limits_traits<T>::quiet_NaN() : spook::fabs(x);
-
-			return spook::signbit(y) ? -absv : absv;
-		}
-
-		template<typename T>
+		template <typename T>
 		SPOOK_CONSTEVAL auto ceil(T x) -> T {
 			if (spook::numeric_limits_traits<T>::is_iec559) {
 				if (x == 0.0) return x;
@@ -747,6 +761,55 @@ namespace spook {
 			if (spook::isfinite(t) && a == b) return a;
 
 			return a + t * (b - a);
+		}
+	}
+
+	inline namespace bit {
+
+		template<typename T>
+		SPOOK_CONSTEVAL auto popcount(T x) -> int {
+			int count{};
+
+			while (x != T(0)) {
+				count += T(1) & x;
+				x >>= 1;
+			}
+
+			return count;
+		}
+
+		namespace detail {
+			template <typename T, typename F>
+			SPOOK_CONSTEVAL auto bitcount_impl(T x, F&& pred) {
+				int count{};
+
+				while (pred(x))
+				{
+					++count;
+					x >>= 1;
+				}
+
+				return count;
+			}
+		}
+
+		template <typename T>
+		SPOOK_CONSTEVAL auto countr_zero(T x) -> int {
+			if (x == 0) return sizeof(T) * CHAR_BIT;
+
+			return detail::bitcount_impl(x, [](T x) { return (T(1) & x) != 1; });
+		}
+
+		template<typename T>
+		SPOOK_CONSTEVAL auto countr_one(T x) -> int {
+			if (x == 0) return 0;
+			
+			return detail::bitcount_impl(x, [](T x) { return x != 0 && (T(1) & x) == 1; });
+		}
+
+		template<typename T>
+		SPOOK_CONSTEVAL auto is_pow2(T x) {
+			return spook::popcount(x) == 1;
 		}
 	}
 
