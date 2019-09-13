@@ -340,7 +340,7 @@ ASALocalRun/
 healthchecksdb
 
 # VSCode
-.vscode/
+.vscode/c_cpp_properties.json
 
 # meson
 build/

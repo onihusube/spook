@@ -154,15 +154,14 @@ namespace spook {
 		template <typename T>
 		SPOOK_CONSTEVAL auto signbit(T x) -> bool;
 
-		template <typename T>
+		template <typename T, spook::disabler<std::is_integral<T>> = nullptr>
 		SPOOK_CONSTEVAL auto fabs(T x) -> T;
 
 		template <typename T>
 		SPOOK_CONSTEVAL auto floor(T x) -> T;
 
-		template <typename T, typename N>
+		template <typename T, typename N, spook::enabler<std::is_integral<N>> = nullptr>
 		SPOOK_CONSTEVAL auto pow(T x, N y) -> T;
-
 
 		template <typename T>
 		SPOOK_CONSTEVAL auto isinf(T x) -> bool {
@@ -218,12 +217,10 @@ namespace spook {
 			return spook::signbit(y) ? -absv : absv;
 		}
 
-		template <typename T, spook::disabler<std::is_integral<T>> = nullptr>
+		template <typename T, spook::disabler<std::is_integral<T>>>
 		SPOOK_CONSTEVAL auto fabs(T x) -> T {
-			if (spook::numeric_limits_traits<T>::is_iec559)
-			{
-				if (x == 0.0)
-					return T(+0.0);
+			if (spook::numeric_limits_traits<T>::is_iec559) {
+				if (spook::iszero(x)) return T(+0.0);
 			}
 
 			return spook::signbit(x) ? -x : x;
@@ -707,7 +704,7 @@ namespace spook {
 			}
 		}
 
-		template<typename T, typename N, spook::enabler<std::is_integral<N>> = nullptr>
+		template<typename T, typename N, spook::enabler<std::is_integral<N>>>
 		SPOOK_CONSTEVAL auto pow(T x, N y) -> T {
 			//0 < nの所で計算
 			std::size_t n = spook::abs(y);
