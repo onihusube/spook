@@ -19,4 +19,4 @@ endif
 
 include_dir = include_directories('include', 'test/testheader', 'subprojects/doctest')
 
-exe = executable('spook_test', files, include_directories : include_dir, cpp_args : options, dependencies : doctest_dep, install : true))
+exe = executable('spook_test', files, include_directories : include_dir, cpp_args : options, dependencies : doctest_dep, install : true)
