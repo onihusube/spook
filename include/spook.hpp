@@ -9,11 +9,11 @@
 
 #ifdef SPOOK_NOT_USE_CONSTEVAL
 
-#define SPOOK_CONSTEVAL constexpr
+#define SPOOK_CONSTEVAL [[nodiscard]] constexpr
 
 #else
 
-#define SPOOK_CONSTEVAL consteval
+#define SPOOK_CONSTEVAL [[nodiscard]] consteval
 
 #endif // SPOOK_NOT_USE_CONSTEVAL
 
@@ -790,7 +790,30 @@ namespace spook {
 			}
 		}
 
-		template <typename T>
+		template<typename T>
+		SPOOK_CONSTEVAL auto rotl(T x, int s) -> T;
+
+		template<typename T>
+		SPOOK_CONSTEVAL auto rotr(T x, int s) -> T {
+			constexpr auto N = sizeof(T) * CHAR_BIT;
+			const int r = s % N;
+
+			if (r == 0) return x;
+			if (r < 0) return rotl(x, -r);
+			return (x >> r) | (x << (N - r));
+		}
+
+		template<typename T>
+		SPOOK_CONSTEVAL auto rotl(T x, int s) -> T {
+			constexpr auto N = sizeof(T) * CHAR_BIT;
+			const int r = s % N;
+
+			if (r == 0) return x;
+			if (r < 0) return rotr(x, -r);
+			return (x << r) | (x >> (N - r));
+		}
+
+		template<typename T>
 		SPOOK_CONSTEVAL auto countr_zero(T x) -> int {
 			if (x == 0) return sizeof(T) * CHAR_BIT;
 
