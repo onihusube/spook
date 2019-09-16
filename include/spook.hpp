@@ -788,6 +788,15 @@ namespace spook {
 
 				return count;
 			}
+
+			template<typename T>
+			SPOOK_CONSTEVAL auto bit_reverse(T x) -> T {
+				constexpr std::size_t N = sizeof(T) * CHAR_BIT;
+				constexpr std::size_t Shift_L = N >> 1;
+				constexpr std::size_t Shift_R = N - Shift_L;
+
+				return (x << Shift_L) | (x >> Shift_R);
+			}
 		}
 
 		template<typename T>
