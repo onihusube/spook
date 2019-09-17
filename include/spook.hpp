@@ -789,14 +789,55 @@ namespace spook {
 				return count;
 			}
 
-			template<typename T>
-			SPOOK_CONSTEVAL auto bit_reverse(T x) -> T {
-				constexpr std::size_t N = sizeof(T) * CHAR_BIT;
-				constexpr std::size_t Shift_L = N >> 1;
-				constexpr std::size_t Shift_R = N - Shift_L;
+			SPOOK_CONSTEVAL auto bit_reverse_impl(std::uint8_t x) -> std::uint8_t {
+				using int_t = std::uint8_t;
+				int_t t = (x  >> 4) | (x  << 4);
+				t = ((t & int_t(0xCCu)) >> 2) | ((t & int_t(0x33u)) << 2);
+				t = ((t & int_t(0xAAu)) >> 1) | ((t & int_t(0x55u)) << 1);
 
-				return (x << Shift_L) | (x >> Shift_R);
+				return t;
 			}
+
+			SPOOK_CONSTEVAL auto bit_reverse_impl(std::uint16_t x) -> std::uint16_t {
+				using int_t = std::uint16_t;
+				int_t t = (x >> 8) | (x << 8);
+				t = ((t & int_t(0xF0F0u)) >> 4) | ((t & int_t(0x0F0Fu)) << 4);
+				t = ((t & int_t(0xCCCCu)) >> 2) | ((t & int_t(0x3333u)) << 2);
+				t = ((t & int_t(0xAAAAu)) >> 1) | ((t & int_t(0x5555u)) << 1);
+
+				return t;
+			}
+
+			SPOOK_CONSTEVAL auto bit_reverse_impl(std::uint32_t x) -> std::uint32_t {
+				using int_t = std::uint32_t;
+				int_t t = (x >> 16) | (x << 16);
+				t = ((t & int_t(0xFF00FF00u)) >> 8) | ((t & int_t(0x00FF00FFu)) << 8);
+				t = ((t & int_t(0xF0F0F0F0u)) >> 4) | ((t & int_t(0x0F0F0F0Fu)) << 4);
+				t = ((t & int_t(0xCCCCCCCCu)) >> 2) | ((t & int_t(0x33333333u)) << 2);
+				t = ((t & int_t(0xAAAAAAAAu)) >> 1) | ((t & int_t(0x55555555u)) << 1);
+
+				return t;
+			}
+
+			SPOOK_CONSTEVAL auto bit_reverse_impl(std::uint64_t x) -> std::uint64_t {
+				using int_t = std::uint64_t;
+				int_t t = (x >> 32) | (x << 32);
+				t = ((t & int_t(0xFFFF0000FFFF0000u)) >> 16) | ((t & int_t(0x0000FFFF0000FFFFu)) << 16);
+				t = ((t & int_t(0xFF00FF00FF00FF00u)) >> 8 ) | ((t & int_t(0x00FF00FF00FF00FFu)) << 8);
+				t = ((t & int_t(0xF0F0F0F0F0F0F0F0u)) >> 4 ) | ((t & int_t(0x0F0F0F0F0F0F0F0Fu)) << 4);
+				t = ((t & int_t(0xCCCCCCCCCCCCCCCCu)) >> 2 ) | ((t & int_t(0x3333333333333333u)) << 2);
+				t = ((t & int_t(0xAAAAAAAAAAAAAAAAu)) >> 1 ) | ((t & int_t(0x5555555555555555u)) << 1);
+
+				return t;
+			}
+
+			template <typename T>
+			SPOOK_CONSTEVAL auto bit_reverse_impl(T x) = delete;
+		} // namespace detail
+
+		template <typename T>
+		SPOOK_CONSTEVAL auto bit_reverse(T x) -> T {
+			return detail::bit_reverse_impl(x);
 		}
 
 		template<typename T>
@@ -834,6 +875,16 @@ namespace spook {
 			if (x == 0) return 0;
 			
 			return detail::bitcount_impl(x, [](T x) { return x != 0 && (T(1) & x) == 1; });
+		}
+
+		template<typename T>
+		SPOOK_CONSTEVAL auto countl_zero(T x) -> int {
+			return spook::countr_zero(spook::bit_reverse(x));
+		}
+
+		template<typename T>
+		SPOOK_CONSTEVAL auto countl_one(T x) -> int{
+			return spook::countr_one(spook::bit_reverse(x));
 		}
 
 		template<typename T>

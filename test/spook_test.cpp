@@ -2,4 +2,4 @@
 #include "doctest/doctest.h"
 
 #include "testheader/cmath_test.hpp"
-#include "testheader/bit.hpp"
+#include "testheader/bit_test.hpp"

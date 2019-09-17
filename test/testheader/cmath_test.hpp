@@ -1,5 +1,7 @@
 #include "doctest/doctest.h"
 
+#include <cmath>
+
 #include "spook.hpp"
 
 namespace spook_test::cmath {
