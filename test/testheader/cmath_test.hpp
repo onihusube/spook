@@ -242,4 +242,54 @@ namespace spook_test::cmath {
       CHECK_EQ(expected, r);
     }
   }
+
+  TEST_CASE("float pow test")
+  {
+    constexpr double eps = 1.0E-15;
+    {
+      auto expected = doctest::Approx(std::pow(2.0, 0.5)).epsilon(eps);
+      constexpr auto r = spook::pow(2.0, 0.5);
+      CHECK_EQ(expected, r);
+    }
+    {
+      auto expected = doctest::Approx(std::pow(3.0, 0.5)).epsilon(eps);
+      constexpr auto r = spook::pow(3.0, 0.5);
+      CHECK_EQ(expected, r);
+    }
+    {
+      auto expected = doctest::Approx(std::pow(2.0, 2.0)).epsilon(eps);
+      constexpr auto r = spook::pow(2.0, 2.0);
+      CHECK_EQ(expected, r);
+    }
+    {
+      auto expected = doctest::Approx(std::pow(2.0, 0.0)).epsilon(eps);
+      constexpr auto r = spook::pow(2.0, 0.0);
+      CHECK_EQ(expected, r);
+    }
+    {
+      auto expected = doctest::Approx(std::pow(2.0, -0.5)).epsilon(eps);
+      constexpr auto r = spook::pow(2.0, -0.5);
+      CHECK_EQ(expected, r);
+    }
+    {
+      auto expected = doctest::Approx(std::pow(3.0, -0.5)).epsilon(eps);
+      constexpr auto r = spook::pow(3.0, -0.5);
+      CHECK_EQ(expected, r);
+    }
+    {
+      auto expected = doctest::Approx(std::pow(2.0, -2.0)).epsilon(eps);
+      constexpr auto r = spook::pow(2.0, -2.0);
+      CHECK_EQ(expected, r);
+    }
+    {
+      auto expected = doctest::Approx(std::pow(1000.0, -2.0)).epsilon(eps);
+      constexpr auto r = spook::pow(1000.0, -2.0);
+      CHECK_EQ(expected, r);
+    }
+    {
+      auto expected = doctest::Approx(std::pow(1000.0, 2.0)).epsilon(1.0e-6);
+      constexpr auto r = spook::pow(1000.0, 2.0);
+      CHECK_EQ(expected, r);
+    }
+  }
 }

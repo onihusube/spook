@@ -160,7 +160,7 @@ namespace spook {
 		template <typename T>
 		SPOOK_CONSTEVAL auto floor(T x) -> T;
 
-		template <typename T, typename N, spook::enabler<std::is_integral<N>> = nullptr>
+		template <typename T, typename N>
 		SPOOK_CONSTEVAL auto pow(T x, N y) -> T;
 
 		template <typename T>
@@ -704,21 +704,35 @@ namespace spook {
 			}
 		}
 
-		template<typename T, typename N, spook::enabler<std::is_integral<N>>>
+		template<typename T, typename N>
 		SPOOK_CONSTEVAL auto pow(T x, N y) -> T {
-			//0 < nの所で計算
-			std::size_t n = spook::abs(y);
+			if constexpr (std::is_integral_v<N>) {
+				//0 < nの所で計算
+				std::size_t n = spook::abs(y);
 
-			if (n == 0) return T(1.0);
-			if (n == 1) return spook::signbit(y) ? T(1.0) / x : x;
+				if (n == 0)
+					return T(1.0);
+				if (n == 1)
+					return spook::signbit(y) ? T(1.0) / x : x;
 
-			auto x_pow_y = detail::pow_impl(x*x, 2, n);
+				auto x_pow_y = detail::pow_impl(x * x, 2, n);
 
-			//奇数乗の時
-			if (n == 1) x_pow_y *= x;
+				//奇数乗の時
+				if (n == 1)
+					x_pow_y *= x;
 
-			//負の冪なら逆数へ
-			return spook::signbit(y) ? T(1.0) / x_pow_y : x_pow_y;
+				//負の冪なら逆数へ
+				return spook::signbit(y) ? T(1.0) / x_pow_y : x_pow_y;
+			} else if constexpr (std::is_floating_point_v<N>) {
+				//TとNが一致しないならば、常にlong doubleを使用して計算
+				using float_t = std::conditional_t<std::is_same_v<T, N>, T, long double>;
+
+				float_t logx = spook::log(float_t(x));
+				return T(spook::exp(y * logx));
+			} else {
+				//その他の型に対しては未定義
+				static_assert([]{return false;}(), "spook::pow<T, N>() is not implemented.");
+			}
 		}
 
 		template<size_t N, typename T>
@@ -820,6 +834,8 @@ namespace spook {
 			}
 
 			SPOOK_CONSTEVAL auto bit_reverse_impl(std::uint64_t x) -> std::uint64_t {
+				//最大桁の半分から再帰的に半分づつ入れ替えていく
+
 				using int_t = std::uint64_t;
 				int_t t = (x >> 32) | (x << 32);
 				t = ((t & int_t(0xFFFF0000FFFF0000u)) >> 16) | ((t & int_t(0x0000FFFF0000FFFFu)) << 16);
@@ -837,6 +853,7 @@ namespace spook {
 
 		template <typename T>
 		SPOOK_CONSTEVAL auto bit_reverse(T x) -> T {
+			//各型用の二分再帰による実装に移譲
 			return detail::bit_reverse_impl(x);
 		}
 
