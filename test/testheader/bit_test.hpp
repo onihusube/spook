@@ -120,4 +120,27 @@ namespace spook_test::bit {
 		CHECK_UNARY_FALSE(spook::is_pow2(0x0C00000000000000ull));
 		CHECK_UNARY_FALSE(spook::is_pow2(0x5000000000000000ull));
 	}
+
+	TEST_CASE("ceill2 test") {
+		CHECK_EQ(1u, spook::ceil2(0u));
+		CHECK_EQ(2u, spook::ceil2(2u));
+		CHECK_EQ(4u, spook::ceil2(3u));
+		CHECK_EQ(0x10u, spook::ceil2(0xFu));
+		CHECK_EQ(0x100000u, spook::ceil2(0xF0000u));
+		CHECK_EQ(0x1000000000u, spook::ceil2(0xF11111111u));
+		CHECK_EQ(0x1000000000u, spook::ceil2(0x1000000000u));
+		CHECK_EQ(0x1000000000000000ull, spook::ceil2(0x0800000000000001ull));
+	}
+
+	TEST_CASE("floor2 tset") {
+		CHECK_EQ(0u, spook::floor2(0u));
+		CHECK_EQ(2u, spook::floor2(2u));
+		CHECK_EQ(2u, spook::floor2(3u));
+		CHECK_EQ(0x8u, spook::floor2(0xFu));
+		CHECK_EQ(0x80000u, spook::floor2(0xF0000u));
+		CHECK_EQ(0x800000000u, spook::floor2(0xF11111111u));
+		CHECK_EQ(0x1000000000u, spook::floor2(0x1000000000u));
+		CHECK_EQ(0x0800000000000000ull, spook::floor2(0x0800000000000001ull));
+		CHECK_EQ(0x1000000000000000ull, spook::floor2(0x1000000000000001ull));
+	}
 }

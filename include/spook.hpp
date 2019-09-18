@@ -908,6 +908,59 @@ namespace spook {
 		SPOOK_CONSTEVAL auto is_pow2(T x) {
 			return spook::popcount(x) == 1;
 		}
+
+		namespace detail {
+
+			/**
+			* @brief 最上位ビット以下を1で埋める
+			* @param x 最上位ビットを検出したい整数値
+			* @return 最上位ビット以下が１で埋められた値
+			*/
+			SPOOK_CONSTEVAL auto fill_msb_less_one(std::uint64_t x) -> std::uint64_t {
+				x |= (x >> 1);
+				x |= (x >> 2);
+				x |= (x >> 4);
+				x |= (x >> 8);
+				x |= (x >> 16);
+				x |= (x >> 32);
+
+				return x;
+			}
+
+			// template<typename T>
+			// SPOOK_CONSTEVAL auto detect_msb_pos(T x) -> T {
+			// 	auto v = std::uint64_t(x);
+
+			// }
+		}
+
+		template<typename T>
+		SPOOK_CONSTEVAL auto ceil2(T x) -> T {
+			if (x == T(0)) return T(1);
+
+			//丁度2^Nの値を正しく出力するために1引いておく
+			--x;
+			T v = detail::fill_msb_less_one(std::uint64_t(x));
+			//帰ってきた値が全て１で埋まっていた場合（TのビットをNとすると2^N <= xの場合）、オーバーフローする
+			return ++v;
+		}
+
+		template<typename T>
+		SPOOK_CONSTEVAL auto floor2(T x) -> T {
+			if (x == T(0)) return T(0);
+
+			T v = detail::fill_msb_less_one(std::uint64_t(x));
+			return v ^ (v >> 1);	//最上位ビットだけを残す
+		}
+
+		// template <typename T>
+		// SPOOK_CONSTEVAL auto log2p1(T x) -> T
+		// {
+		// 	if (x == T(0)) return T(0);
+
+		// 	T v = detail::msb_detect(std::uint64_t(x));
+		// 	return v ^ (v >> 1);
+		// }
 	}
 
 	inline namespace functional {
