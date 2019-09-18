@@ -17,6 +17,12 @@
 
 #endif // SPOOK_NOT_USE_CONSTEVAL
 
+#ifdef __cpp_lib_concepts
+//static_assert(false);
+#else 
+
+#endif
+
 namespace spook {
 
 	/**
@@ -725,9 +731,9 @@ namespace spook {
 				return spook::signbit(y) ? T(1.0) / x_pow_y : x_pow_y;
 			} else if constexpr (std::is_floating_point_v<N>) {
 				//TとNが一致しないならば、常にlong doubleを使用して計算
-				using float_t = std::conditional_t<std::is_same_v<T, N>, T, long double>;
+				using floating_t = std::conditional_t<std::is_same_v<T, N>, T, long double>;
 
-				float_t logx = spook::log(float_t(x));
+				floating_t logx = spook::log(floating_t(x));
 				return T(spook::exp(y * logx));
 			} else {
 				//その他の型に対しては未定義
@@ -934,7 +940,7 @@ namespace spook {
 
 			//丁度2^Nの値を正しく出力するために1引いておく
 			--x;
-			T v = detail::fill_msb_less_one(std::uint64_t(x));
+			T v = T(detail::fill_msb_less_one(std::uint64_t(x)));
 			//帰ってきた値が全て１で埋まっていた場合（TのビットをNとすると2^N <= xの場合）、結果は正しくない
 			return ++v;
 		}
@@ -943,7 +949,7 @@ namespace spook {
 		SPOOK_CONSTEVAL auto floor2(T x) -> T {
 			if (x == T(0)) return T(0);
 
-			T v = detail::fill_msb_less_one(std::uint64_t(x));
+			T v = T(detail::fill_msb_less_one(std::uint64_t(x)));
 			return v ^ (v >> 1);	//最上位ビットだけを残す
 		}
 
@@ -977,7 +983,7 @@ namespace spook {
 		SPOOK_CONSTEVAL auto msb_pos(T x) -> int {
 			if (x == T(0)) return 0;
 			//最上位ビットだけを残す
-			T v = detail::fill_msb_less_one(std::uint64_t(x));
+			T v = T(detail::fill_msb_less_one(std::uint64_t(x)));
 			v = v ^ (v >> 1);
 
 			int h = detail::hash_64(v);
@@ -993,7 +999,15 @@ namespace spook {
 		template <typename T>
 		SPOOK_CONSTEVAL auto lsb_pos(T x) -> int {
 			if (x == T(0)) return 0;
-			auto v = x & -x; //最下位ビットだけを残す
+			
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4146)
+#endif // MSC_VER
+			T v = x & -x; //最下位ビットだけを残す
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif // MSC_VER
 
 			int h = detail::hash_64(v);
 
