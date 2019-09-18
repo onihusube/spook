@@ -935,7 +935,7 @@ namespace spook {
 			//丁度2^Nの値を正しく出力するために1引いておく
 			--x;
 			T v = detail::fill_msb_less_one(std::uint64_t(x));
-			//帰ってきた値が全て１で埋まっていた場合（TのビットをNとすると2^N <= xの場合）、オーバーフローする
+			//帰ってきた値が全て１で埋まっていた場合（TのビットをNとすると2^N <= xの場合）、結果は正しくない
 			return ++v;
 		}
 
@@ -950,15 +950,14 @@ namespace spook {
 		namespace detail {
 
 			/**
-			* @brief 任意の64ビット値を0~63の間に押し込める完全ハッシュ関数
-			* @detail 1ビットだけ立っている値の出力は、下のhash2posによってその桁位置に写すことができる
+			* @brief 任意の64ビット値を0~63の間に押し込めるハッシュ関数
+			* @detail 1ビットだけ立っている値に対しては完全ハッシュとなる、その出力は下のhash2posによってその桁位置に写すことができる
 			* @detail 詳細？http://supertech.csail.mit.edu/papers/debruijn.pdf
 			* @param x 入力
 			* @return [0, 63]の間の値
 			*/
 			SPOOK_CONSTEVAL auto hash_64(std::uint64_t x) -> int {
-				auto v = x & -x;
-				int h = (v * 0x03F566ED27179461UL) >> 58;
+				int h = (x * 0x03F566ED27179461UL) >> 58;
 				return h;
 			}
 
@@ -969,6 +968,11 @@ namespace spook {
 			inline constexpr char hash2pos[] = {1, 2, 60, 3, 61, 41, 55, 4, 62, 33, 50, 42, 56, 20, 36, 5, 63, 53, 31, 34, 51, 13, 15, 43, 57, 17, 28, 21, 37, 24, 45, 6, 64, 59, 40, 54, 32, 49, 19, 35, 52, 30, 12, 14, 16, 27, 23, 44, 58, 39, 48, 18, 29, 11, 26, 22, 38, 47, 10, 25, 46, 9, 8, 7};
 		}
 
+		/**
+		* @brief 右端を1桁目として、最上位ビットの位置を求める
+		* @param x LSB位置を求める値
+		* @return LSBの位置（x == 0なら0）
+		*/
 		template <typename T>
 		SPOOK_CONSTEVAL auto msb_pos(T x) -> int {
 			if (x == T(0)) return 0;
@@ -981,6 +985,11 @@ namespace spook {
 			return detail::hash2pos[h];
 		}
 
+		/**
+		* @brief 右端を1桁目として、最下位ビットの位置を求める
+		* @param x MSB位置を求める値
+		* @return MSBの位置（x == 0なら0）
+		*/
 		template <typename T>
 		SPOOK_CONSTEVAL auto lsb_pos(T x) -> int {
 			if (x == T(0)) return 0;
@@ -993,11 +1002,8 @@ namespace spook {
 
 		template <typename T>
 		SPOOK_CONSTEVAL auto log2p1(T x) -> T {
-			if (x == T(0)) return T(0);
-
 			//log2p1はすなわち最上位ビットの位置！
-			T n = spook::msb_pos(x);
-			return n;
+			return T(spook::msb_pos(x));
 		}
 	}
 
