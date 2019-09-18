@@ -143,4 +143,31 @@ namespace spook_test::bit {
 		CHECK_EQ(0x0800000000000000ull, spook::floor2(0x0800000000000001ull));
 		CHECK_EQ(0x1000000000000000ull, spook::floor2(0x1000000000000001ull));
 	}
+
+	TEST_CASE("lsb_pos test") {
+		CHECK_EQ(0, spook::lsb_pos(0u));
+		CHECK_EQ(1, spook::lsb_pos(1u));
+		CHECK_EQ(5, spook::lsb_pos(0xFF10u));
+		CHECK_EQ(32, spook::lsb_pos(0xFFFF80000000u));
+		CHECK_EQ(64, spook::lsb_pos(0x8000000000000000u));
+	}
+
+	TEST_CASE("msb_pos test") {
+		CHECK_EQ(0, spook::msb_pos(0u));
+		CHECK_EQ(1, spook::msb_pos(1u));
+		CHECK_EQ(16, spook::msb_pos(0xFF11u));
+		CHECK_EQ(32, spook::msb_pos(0x800F0100u));
+		CHECK_EQ(64, spook::msb_pos(0x800010000A001010u));
+	}
+
+	TEST_CASE("log2p1 test") {
+		CHECK_EQ(0u, spook::log2p1(0u));
+		CHECK_EQ(1u, spook::log2p1(1u));
+		CHECK_EQ(7u, spook::log2p1(127u));
+		CHECK_EQ(8u, spook::log2p1(128u));
+		CHECK_EQ(10u, spook::log2p1(512u));
+		CHECK_EQ(11u, spook::log2p1(1024u));
+		CHECK_EQ(32u, spook::log2p1(0xF30cf328u));
+		CHECK_EQ(64u, spook::log2p1(0xFF043802abcf9328u));
+	}
 }

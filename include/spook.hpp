@@ -926,12 +926,6 @@ namespace spook {
 
 				return x;
 			}
-
-			// template<typename T>
-			// SPOOK_CONSTEVAL auto detect_msb_pos(T x) -> T {
-			// 	auto v = std::uint64_t(x);
-
-			// }
 		}
 
 		template<typename T>
@@ -953,14 +947,58 @@ namespace spook {
 			return v ^ (v >> 1);	//最上位ビットだけを残す
 		}
 
-		// template <typename T>
-		// SPOOK_CONSTEVAL auto log2p1(T x) -> T
-		// {
-		// 	if (x == T(0)) return T(0);
+		namespace detail {
 
-		// 	T v = detail::msb_detect(std::uint64_t(x));
-		// 	return v ^ (v >> 1);
-		// }
+			/**
+			* @brief 任意の64ビット値を0~63の間に押し込める完全ハッシュ関数
+			* @detail 1ビットだけ立っている値の出力は、下のhash2posによってその桁位置に写すことができる
+			* @detail 詳細？http://supertech.csail.mit.edu/papers/debruijn.pdf
+			* @param x 入力
+			* @return [0, 63]の間の値
+			*/
+			SPOOK_CONSTEVAL auto hash_64(std::uint64_t x) -> int {
+				auto v = x & -x;
+				int h = (v * 0x03F566ED27179461UL) >> 58;
+				return h;
+			}
+
+			/**
+			* @brief hash_64()の出力を対応する桁位置へ変換
+			* @detail 求める簡易なもの -> https://wandbox.org/permlink/DKLoL1qKgiwTrugE
+			*/
+			inline constexpr char hash2pos[] = {1, 2, 60, 3, 61, 41, 55, 4, 62, 33, 50, 42, 56, 20, 36, 5, 63, 53, 31, 34, 51, 13, 15, 43, 57, 17, 28, 21, 37, 24, 45, 6, 64, 59, 40, 54, 32, 49, 19, 35, 52, 30, 12, 14, 16, 27, 23, 44, 58, 39, 48, 18, 29, 11, 26, 22, 38, 47, 10, 25, 46, 9, 8, 7};
+		}
+
+		template <typename T>
+		SPOOK_CONSTEVAL auto msb_pos(T x) -> int {
+			if (x == T(0)) return 0;
+			//最上位ビットだけを残す
+			T v = detail::fill_msb_less_one(std::uint64_t(x));
+			v = v ^ (v >> 1);
+
+			int h = detail::hash_64(v);
+
+			return detail::hash2pos[h];
+		}
+
+		template <typename T>
+		SPOOK_CONSTEVAL auto lsb_pos(T x) -> int {
+			if (x == T(0)) return 0;
+			auto v = x & -x; //最下位ビットだけを残す
+
+			int h = detail::hash_64(v);
+
+			return detail::hash2pos[h];
+		}
+
+		template <typename T>
+		SPOOK_CONSTEVAL auto log2p1(T x) -> T {
+			if (x == T(0)) return T(0);
+
+			//log2p1はすなわち最上位ビットの位置！
+			T n = spook::msb_pos(x);
+			return n;
+		}
 	}
 
 	inline namespace functional {
