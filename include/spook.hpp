@@ -17,6 +17,42 @@
 
 #endif // SPOOK_NOT_USE_CONSTEVAL
 
+
+namespace spook {
+	inline namespace customization_points {
+		/**
+		* @brief numeric_limitsをadaptするtraits
+		* @detail これは組み込み型等のためのstd::numeric_limits<T>を使用するもの
+		* @detail 組み込み型でない型で使用する場合は同じシグネチャになるように明示的特殊化する
+		*/
+		template<typename T>
+		struct numeric_limits_traits : public std::numeric_limits<T> {};
+
+		/**
+		* @brief is_floating_pointをadaptするtraits
+		* @detail これは組み込み型等のためのstd::is_floating_point<T>を使用するもの
+		* @detail 組み込み型でない型で使用する場合は同じシグネチャになるように明示的特殊化する
+		*/
+		template<typename T>
+		struct is_floating_point : public std::is_floating_point<T> {};
+
+		template<typename T>
+		inline constexpr bool is_floating_point_v = spook::is_floating_point<T>::value;
+
+		/**
+		* @brief is_integralをadaptするtraits
+		* @detail これは組み込み型等のためのstd::is_integral<T>を使用するもの
+		* @detail 組み込み型でない型で使用する場合は同じシグネチャになるように明示的特殊化する
+		*/
+		template<typename T>
+		struct is_integral : public std::is_integral<T> {};
+
+		template<typename T>
+		inline constexpr bool is_integral_v = spook::is_integral<T>::value;
+	}
+}
+
+
 #ifdef __cpp_lib_concepts
 #include <concepts>
 #define CONCEPT_FALLBACK(constraint, sfinae) > requires constraint
@@ -26,7 +62,7 @@ namespace spook {
 	inline namespace concepts {
 
 		template<typename T>
-		concept floating_point = std::is_floating_point_v<T>;
+		concept floating_point = spook::is_floating_point<T>::value;
 	}
 }
 #else 
@@ -34,16 +70,6 @@ namespace spook {
 #define CONCEPT_FALLBACK_REDECL(constraint, sfinae) , sfinae
 #endif
 
-namespace spook {
-
-	/**
-	* @brief numeric_limitsをadaptするtraits
-	* @detail これは組み込み型等のためのstd::numeric_limits<T>を使用するもの
-	* @detail 組み込み型でない型で使用する場合は同じシグネチャになるように部分特殊化する
-	*/
-	template<typename T>
-	struct numeric_limits_traits : public std::numeric_limits<T> {};
-}
 
 namespace spook {
 	inline namespace type_traits {
@@ -66,11 +92,18 @@ namespace spook {
 		template<typename T>
 		struct check_unsigned : std::is_same<T, std::make_unsigned_t<T>> {};
 
+		/**
+		* @brief 符号なし整数型かどうかを調べる
+		* @detail 任意の型に対しては明示的特殊化によってアダプトする
+		*/
 		template<typename T>
-		using is_unsigned = std::conjunction<
-			std::is_integral<T>, 
-			std::disjunction< std::is_same<T, std::size_t>, check_unsigned<T> >
-		>;
+		struct is_unsigned : std::conjunction<
+								 std::is_integral<T>,
+								 std::disjunction<
+								 	std::is_same<T, std::size_t>, 
+									check_unsigned<T>
+								 >
+							 > {};
 
 		/**
 		* @brief あるメンバポインタがある型のメンバを指すものであるかを調べる
@@ -171,8 +204,11 @@ namespace spook {
 		template <typename T>
 		SPOOK_CONSTEVAL auto signbit(T x) -> bool;
 
-		template <typename T CONCEPT_FALLBACK(concepts::floating_point<T>, enabler<std::is_floating_point<T>>)>
+		template <typename T CONCEPT_FALLBACK(concepts::floating_point<T>, enabler<spook::is_floating_point<T>>)>
 		SPOOK_CONSTEVAL auto fabs(T x) -> T;
+
+		template <typename T>
+		SPOOK_CONSTEVAL auto abs(T x) -> T;
 
 		template <typename T>
 		SPOOK_CONSTEVAL auto floor(T x) -> T;
@@ -189,11 +225,19 @@ namespace spook {
 
 		template<typename T>
 		SPOOK_CONSTEVAL auto isnan(T x) -> bool {
+			if constexpr (spook::is_integral_v<T>) {
+				return true;
+			}
+
 			return !(x == x);
 		}
 
 		template<typename T>
 		SPOOK_CONSTEVAL auto isfinite(T x) -> bool {
+			if constexpr (spook::is_integral_v<T>) {
+				return false;
+			}
+
 			if (spook::isinf(x)) return false;
 			if (spook::isnan(x)) return false;
 
@@ -207,6 +251,10 @@ namespace spook {
 
 		template<typename T>
 		SPOOK_CONSTEVAL auto isnormal(T x) -> bool {
+			if constexpr (spook::is_integral_v<T>) {
+				return true;
+			}
+
 			if (spook::iszero(x)) return false;
 			if (spook::isnan(x)) return false;
 			if (spook::isinf(x)) return false;
@@ -229,38 +277,41 @@ namespace spook {
 		}
 		template <typename T>
 		SPOOK_CONSTEVAL auto copysign(T x, T y) -> T {
-			auto absv = spook::isnan(x) ? spook::numeric_limits_traits<T>::quiet_NaN() : spook::fabs(x);
+			auto absv = spook::isnan(x) ? spook::numeric_limits_traits<T>::quiet_NaN() : spook::abs(x);
 
 			return spook::signbit(y) ? -absv : absv;
 		}
 
-		template <typename T CONCEPT_FALLBACK_REDECL(concepts::floating_point<T>, enabler<std::is_floating_point<T>>)>
+		template <typename T CONCEPT_FALLBACK_REDECL(concepts::floating_point<T>, enabler<spook::is_floating_point<T>>)>
 		SPOOK_CONSTEVAL auto fabs(T x) -> T {
 			if (spook::numeric_limits_traits<T>::is_iec559) {
 				if (spook::iszero(x)) return T(+0.0);
 			}
 
 			return spook::signbit(x) ? -x : x;
-			//return (x < 0.0) ? (-x) : (x);
 		}
 
 		template<typename T>
 		SPOOK_CONSTEVAL auto abs(T x) -> T {
-			if constexpr (std::is_floating_point_v<T> == true) {
+			if constexpr (spook::is_floating_point_v<T> == true) {
 				return spook::fabs(x);
 			}
-			if constexpr (std::is_unsigned_v<T> == true) {
+			if constexpr (spook::is_unsigned<T>::value == true) {
 				return x;
 			}
 			else {
+				//符号付整数型の時
 				if (T(0) <= x) return x;
-				//符号付かつ負の値なら2の補数を返す
-				return (~x) + 1;
+				return -x;
 			}
 		}
 
 		template <typename T>
 		SPOOK_CONSTEVAL auto ceil(T x) -> T {
+			if constexpr (spook::is_integral_v<T>) {
+				return x;
+			}
+
 			if (spook::numeric_limits_traits<T>::is_iec559) {
 				if (x == 0.0) return x;
 				if (spook::isinf(x)) return x;
@@ -278,6 +329,10 @@ namespace spook {
 
 		template<typename T>
 		SPOOK_CONSTEVAL auto floor(T x) -> T {
+			if constexpr (spook::is_integral_v<T>) {
+				return x;
+			}
+
 			if (spook::numeric_limits_traits<T>::is_iec559) {
 				if (x == 0.0) return x;
 				if (spook::isinf(x)) return x;
@@ -303,7 +358,7 @@ namespace spook {
 			}
 		}
 
-		template<typename T CONCEPT_FALLBACK(concepts::floating_point<T>, enabler<std::is_floating_point<T>>)>
+		template<typename T CONCEPT_FALLBACK(concepts::floating_point<T>, enabler<spook::is_floating_point<T>>)>
 		SPOOK_CONSTEVAL auto round_to_nearest(T x) -> T {
 			//ゼロ方向へ丸める
 			auto rounded = spook::trunc(x);
@@ -723,7 +778,7 @@ namespace spook {
 
 		template<typename T, typename N>
 		SPOOK_CONSTEVAL auto pow(T x, N y) -> T {
-			if constexpr (std::is_integral_v<N>) {
+			if constexpr (spook::is_integral_v<N>) {
 				//0 < nの所で計算
 				std::size_t n = spook::abs(y);
 
@@ -740,7 +795,7 @@ namespace spook {
 
 				//負の冪なら逆数へ
 				return spook::signbit(y) ? T(1.0) / x_pow_y : x_pow_y;
-			} else if constexpr (std::is_floating_point_v<N>) {
+			} else if constexpr (spook::is_floating_point_v<N>) {
 				//TとNが一致しないならば、常にlong doubleを使用して計算
 				using floating_t = std::conditional_t<std::is_same_v<T, N>, T, long double>;
 
