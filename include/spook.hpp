@@ -887,7 +887,7 @@ namespace spook {
 			return (x >> r) | (x << (N - r));
 		}
 
-		template<typename T CONCEPT_FALLBACK(T, std::unsigned_integral, enabler<type_traits::is_unsigned<T>>)>
+		template<typename T CONCEPT_FALLBACK_REDECL(T, std::unsigned_integral, enabler<type_traits::is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto rotl(T x, int s) -> T {
 			constexpr auto N = sizeof(T) * CHAR_BIT;
 			const int r = s % N;
