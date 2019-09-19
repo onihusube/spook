@@ -218,6 +218,10 @@ namespace spook {
 
 		template <typename T>
 		SPOOK_CONSTEVAL auto isinf(T x) -> bool {
+			if constexpr (spook::is_integral_v<T>) {
+				return false;
+			}
+
 			if ((spook::numeric_limits_traits<T>::max)() < x) return true;
 			if (x < spook::numeric_limits_traits<T>::lowest()) return true;
 			return false;
@@ -849,11 +853,91 @@ namespace spook {
 
 	inline namespace bit {
 
-		template<typename T CONCEPT_FALLBACK(std::unsigned_integral<T>, enabler<type_traits::is_unsigned<T>>)>
+		namespace detail {
+
+			/**
+			* @brief 任意の64ビット値を0~63の間に押し込めるハッシュ関数
+			* @detail 1ビットだけ立っている値に対しては完全ハッシュとなる、その出力は下のhash2posによってその桁位置に写すことができる
+			* @detail 詳細？http://supertech.csail.mit.edu/papers/debruijn.pdf
+			* @param x 入力
+			* @return [0, 63]の間の値
+			*/
+			SPOOK_CONSTEVAL auto hash_64(std::uint64_t x) -> int {
+				int h = (x * 0x03F566ED27179461UL) >> 58;
+				return h;
+			}
+
+			/**
+			* @brief hash_64()の出力を対応する桁位置へ変換
+			* @detail 求める簡易なもの -> https://wandbox.org/permlink/DKLoL1qKgiwTrugE
+			*/
+			inline constexpr char hash2pos[] = {1, 2, 60, 3, 61, 41, 55, 4, 62, 33, 50, 42, 56, 20, 36, 5, 63, 53, 31, 34, 51, 13, 15, 43, 57, 17, 28, 21, 37, 24, 45, 6, 64, 59, 40, 54, 32, 49, 19, 35, 52, 30, 12, 14, 16, 27, 23, 44, 58, 39, 48, 18, 29, 11, 26, 22, 38, 47, 10, 25, 46, 9, 8, 7};
+
+			/**
+			* @brief 最上位ビット以下を1で埋める
+			* @param x 最上位ビットを検出したい整数値
+			* @return 最上位ビット以下が１で埋められた値
+			*/
+			SPOOK_CONSTEVAL auto fill_msb_less_one(std::uint64_t x) -> std::uint64_t {
+				x |= (x >> 1);
+				x |= (x >> 2);
+				x |= (x >> 4);
+				x |= (x >> 8);
+				x |= (x >> 16);
+				x |= (x >> 32);
+
+				return x;
+			}
+
+		} // namespace detail
+
+		/**
+		* @brief 右端を1桁目として、最上位ビットの位置を求める
+		* @param x LSB位置を求める値
+		* @return LSBの位置（x == 0なら0）
+		*/
+		template <typename T CONCEPT_FALLBACK(std::unsigned_integral<T>, enabler<type_traits::is_unsigned<T>>)>
+		SPOOK_CONSTEVAL auto msb_pos(T x) -> int {
+			if (x == T(0)) return 0;
+			//最上位ビットだけを残す
+			T v = T(detail::fill_msb_less_one(std::uint64_t(x)));
+			v = v ^ (v >> 1);
+
+			int h = detail::hash_64(v);
+
+			return detail::hash2pos[h];
+		}
+
+		/**
+		* @brief 右端を1桁目として、最下位ビットの位置を求める
+		* @param x MSB位置を求める値
+		* @return MSBの位置（x == 0なら0）
+		*/
+		template <typename T CONCEPT_FALLBACK(std::unsigned_integral<T>, enabler<type_traits::is_unsigned<T>>)>
+		SPOOK_CONSTEVAL auto lsb_pos(T x) -> int
+		{
+			if (x == T(0)) return 0;
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4146)
+#endif				  // MSC_VER
+			T v = x & -x; //最下位ビットだけを残す
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif // MSC_VER
+
+			int h = detail::hash_64(v);
+
+			return detail::hash2pos[h];
+		}
+
+		template <typename T CONCEPT_FALLBACK(std::unsigned_integral<T>, enabler<type_traits::is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto popcount(T x) -> int {
 			int count{};
 
-			while (x != T(0)) {
+			while (x != T(0))
+			{
 				count += T(1) & x;
 				x >>= 1;
 			}
@@ -862,19 +946,6 @@ namespace spook {
 		}
 
 		namespace detail {
-			template <typename T, typename F CONCEPT_FALLBACK(std::unsigned_integral<T>, enabler<type_traits::is_unsigned<T>>)>
-			SPOOK_CONSTEVAL auto bitcount_impl(T x, F&& pred) {
-				int count{};
-
-				while (pred(x))
-				{
-					++count;
-					x >>= 1;
-				}
-
-				return count;
-			}
-
 			SPOOK_CONSTEVAL auto bit_reverse_impl(std::uint8_t x) -> std::uint8_t {
 				using int_t = std::uint8_t;
 				int_t t = (x  >> 4) | (x  << 4);
@@ -956,48 +1027,34 @@ namespace spook {
 		SPOOK_CONSTEVAL auto countr_zero(T x) -> int {
 			if (x == 0) return sizeof(T) * CHAR_BIT;
 
-			return detail::bitcount_impl(x, [](T x) { return (T(1) & x) != 1; });
+			auto n = spook::lsb_pos(x);
+			return --n;
 		}
 
 		template<typename T CONCEPT_FALLBACK(std::unsigned_integral<T>, enabler<type_traits::is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto countr_one(T x) -> int {
 			if (x == 0) return 0;
-			
-			return detail::bitcount_impl(x, [](T x) { return x != 0 && (T(1) & x) == 1; });
+
+			return spook::countr_zero(~x);
 		}
 
 		template<typename T CONCEPT_FALLBACK(std::unsigned_integral<T>, enabler<type_traits::is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto countl_zero(T x) -> int {
-			return spook::countr_zero(spook::bit_reverse(x));
+			if (x == 0) return sizeof(T) * CHAR_BIT;
+
+			auto n = spook::msb_pos(x);
+			return (sizeof(T) * CHAR_BIT) - n;
 		}
 
 		template<typename T CONCEPT_FALLBACK(std::unsigned_integral<T>, enabler<type_traits::is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto countl_one(T x) -> int{
-			return spook::countr_one(spook::bit_reverse(x));
+			if (x == 0) return 0;
+			return spook::countl_zero(~x);
 		}
 
 		template<typename T CONCEPT_FALLBACK(std::unsigned_integral<T>, enabler<type_traits::is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto is_pow2(T x) {
 			return spook::popcount(x) == 1;
-		}
-
-		namespace detail {
-
-			/**
-			* @brief 最上位ビット以下を1で埋める
-			* @param x 最上位ビットを検出したい整数値
-			* @return 最上位ビット以下が１で埋められた値
-			*/
-			SPOOK_CONSTEVAL auto fill_msb_less_one(std::uint64_t x) -> std::uint64_t {
-				x |= (x >> 1);
-				x |= (x >> 2);
-				x |= (x >> 4);
-				x |= (x >> 8);
-				x |= (x >> 16);
-				x |= (x >> 32);
-
-				return x;
-			}
 		}
 
 		template<typename T CONCEPT_FALLBACK(std::unsigned_integral<T>, enabler<type_traits::is_unsigned<T>>)>
@@ -1017,67 +1074,6 @@ namespace spook {
 
 			T v = T(detail::fill_msb_less_one(std::uint64_t(x)));
 			return v ^ (v >> 1);	//最上位ビットだけを残す
-		}
-
-		namespace detail {
-
-			/**
-			* @brief 任意の64ビット値を0~63の間に押し込めるハッシュ関数
-			* @detail 1ビットだけ立っている値に対しては完全ハッシュとなる、その出力は下のhash2posによってその桁位置に写すことができる
-			* @detail 詳細？http://supertech.csail.mit.edu/papers/debruijn.pdf
-			* @param x 入力
-			* @return [0, 63]の間の値
-			*/
-			SPOOK_CONSTEVAL auto hash_64(std::uint64_t x) -> int {
-				int h = (x * 0x03F566ED27179461UL) >> 58;
-				return h;
-			}
-
-			/**
-			* @brief hash_64()の出力を対応する桁位置へ変換
-			* @detail 求める簡易なもの -> https://wandbox.org/permlink/DKLoL1qKgiwTrugE
-			*/
-			inline constexpr char hash2pos[] = {1, 2, 60, 3, 61, 41, 55, 4, 62, 33, 50, 42, 56, 20, 36, 5, 63, 53, 31, 34, 51, 13, 15, 43, 57, 17, 28, 21, 37, 24, 45, 6, 64, 59, 40, 54, 32, 49, 19, 35, 52, 30, 12, 14, 16, 27, 23, 44, 58, 39, 48, 18, 29, 11, 26, 22, 38, 47, 10, 25, 46, 9, 8, 7};
-		}
-
-		/**
-		* @brief 右端を1桁目として、最上位ビットの位置を求める
-		* @param x LSB位置を求める値
-		* @return LSBの位置（x == 0なら0）
-		*/
-		template <typename T CONCEPT_FALLBACK(std::unsigned_integral<T>, enabler<type_traits::is_unsigned<T>>)>
-		SPOOK_CONSTEVAL auto msb_pos(T x) -> int {
-			if (x == T(0)) return 0;
-			//最上位ビットだけを残す
-			T v = T(detail::fill_msb_less_one(std::uint64_t(x)));
-			v = v ^ (v >> 1);
-
-			int h = detail::hash_64(v);
-
-			return detail::hash2pos[h];
-		}
-
-		/**
-		* @brief 右端を1桁目として、最下位ビットの位置を求める
-		* @param x MSB位置を求める値
-		* @return MSBの位置（x == 0なら0）
-		*/
-		template <typename T CONCEPT_FALLBACK(std::unsigned_integral<T>, enabler<type_traits::is_unsigned<T>>)>
-		SPOOK_CONSTEVAL auto lsb_pos(T x) -> int {
-			if (x == T(0)) return 0;
-			
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4146)
-#endif // MSC_VER
-			T v = x & -x; //最下位ビットだけを残す
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif // MSC_VER
-
-			int h = detail::hash_64(v);
-
-			return detail::hash2pos[h];
 		}
 
 		template <typename T CONCEPT_FALLBACK(std::unsigned_integral<T>, enabler<type_traits::is_unsigned<T>>)>
