@@ -932,17 +932,45 @@ namespace spook {
 			return detail::hash2pos[h];
 		}
 
-		template <typename T CONCEPT_FALLBACK(std::unsigned_integral<T>, enabler<type_traits::is_unsigned<T>>)>
-		SPOOK_CONSTEVAL auto popcount(T x) -> int {
-			int count{};
+		namespace detail {
 
-			while (x != T(0))
-			{
-				count += T(1) & x;
-				x >>= 1;
+			SPOOK_CONSTEVAL auto popcount_impl(std::uint64_t x) -> int {
+				using int_t = std::uint64_t;
+				int_t t = ((x & int_t(0xAAAAAAAAAAAAAAAAull)) >> 1) + (x & int_t(0x5555555555555555ull));
+				t = ((t & int_t(0xCCCCCCCCCCCCCCCCull)) >> 2) + (t & int_t(0x3333333333333333ull));
+				t = ((t & int_t(0xF0F0F0F0F0F0F0F0ull)) >> 4) + (t & int_t(0x0F0F0F0F0F0F0F0Full));
+				t = ((t & int_t(0xFF00FF00FF00FF00ull)) >> 8) + (t & int_t(0x00FF00FF00FF00FFull));
+				t = ((t & int_t(0xFFFF0000FFFF0000ull)) >> 16) + (t & int_t(0x0000FFFF0000FFFFull));
+				t = ((t & int_t(0xFFFFFFFF00000000ull)) >> 32) + (t & int_t(0x00000000FFFFFFFFull));
+
+				return int(t);
 			}
 
-			return count;
+			template<typename T>
+			SPOOK_CONSTEVAL auto popcount_impl(T x) -> int {
+				int count{};
+
+				while (x != T(0))
+				{
+					count += T(1) & x;
+					x >>= 1;
+				}
+
+				return count;
+			}
+		}
+
+		template <typename T CONCEPT_FALLBACK(std::unsigned_integral<T>, enabler<type_traits::is_unsigned<T>>)>
+		SPOOK_CONSTEVAL auto is_pow2(T x) -> bool {
+			return x && !(x & (x - 1));
+		}
+
+		template <typename T CONCEPT_FALLBACK(std::unsigned_integral<T>, enabler<type_traits::is_unsigned<T>>)>
+		SPOOK_CONSTEVAL auto popcount(T x) -> int {
+			if constexpr (spook::is_pow2(sizeof(T))) {
+				return detail::popcount_impl(std::uint64_t(x));
+			}
+			return detail::popcount_impl(x);
 		}
 
 		namespace detail {
@@ -1050,11 +1078,6 @@ namespace spook {
 		SPOOK_CONSTEVAL auto countl_one(T x) -> int{
 			if (x == 0) return 0;
 			return spook::countl_zero(~x);
-		}
-
-		template<typename T CONCEPT_FALLBACK(std::unsigned_integral<T>, enabler<type_traits::is_unsigned<T>>)>
-		SPOOK_CONSTEVAL auto is_pow2(T x) {
-			return spook::popcount(x) == 1;
 		}
 
 		template<typename T CONCEPT_FALLBACK(std::unsigned_integral<T>, enabler<type_traits::is_unsigned<T>>)>
