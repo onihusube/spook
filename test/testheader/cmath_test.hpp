@@ -243,6 +243,357 @@ namespace spook_test::cmath {
     }
   }
 
+  TEST_CASE("fmod_test"){
+    constexpr double eps = 1.0E-15;
+    {
+      auto expected = doctest::Approx(std::fmod(3.14, 3.0)).epsilon(eps);
+      constexpr auto r = spook::fmod(3.14, 3.0);
+      CHECK_EQ(expected, r);
+    }
+    {
+      auto expected = doctest::Approx(std::fmod(5.0, 2.0)).epsilon(eps);
+      constexpr auto r = spook::fmod(5.0, 2.0);
+      CHECK_EQ(expected, r);
+    }
+    {
+      auto expected = doctest::Approx(std::fmod(6.0, 4.0)).epsilon(eps);
+      constexpr auto r = spook::fmod(6.0, 4.0);
+      CHECK_EQ(expected, r);
+    }
+    {
+      auto expected = doctest::Approx(std::fmod(6.3, 3.0)).epsilon(eps);
+      constexpr auto r = spook::fmod(6.3, 3.0);
+      CHECK_EQ(expected, r);
+    }
+    {
+      auto expected = doctest::Approx(std::fmod(6.3, -3.0)).epsilon(eps);
+      constexpr auto r = spook::fmod(6.3, -3.0);
+      CHECK_EQ(expected, r);
+    }
+    {
+      auto expected = doctest::Approx(std::fmod(-6.3, 3.0)).epsilon(eps);
+      constexpr auto r = spook::fmod(-6.3, 3.0);
+      CHECK_EQ(expected, r);
+    }
+    {
+      auto expected = doctest::Approx(std::fmod(6.3, 3.15)).epsilon(eps);
+      constexpr auto r = spook::fmod(6.3, 3.15);
+      CHECK_EQ(expected, r);
+    }
+    {
+      auto expected = doctest::Approx(std::fmod(6.0, 2.0)).epsilon(eps);
+      constexpr auto r = spook::fmod(6.0, 2.0);
+      CHECK_EQ(expected, r);
+    }
+  }
+
+  TEST_CASE("sin test") {
+    using namespace spook::constant;
+    constexpr double eps = 1.0E-15;
+
+    {
+      constexpr double coeff = 0.0;
+
+      auto expected = std::sin(coeff * pi<>);
+      constexpr auto calc = spook::sin(coeff * pi<>);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      constexpr double coeff = 0.25;
+
+      auto expected = std::sin(coeff * pi<>);
+      constexpr auto calc = spook::sin(coeff * pi<>);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      constexpr double coeff = 0.5;
+
+      auto expected = std::sin(coeff * pi<>);
+      constexpr auto calc = spook::sin(coeff * pi<>);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      constexpr double coeff = 0.75;
+
+      auto expected = std::sin(coeff * pi<>);
+      constexpr auto calc = spook::sin(coeff * pi<>);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      constexpr double coeff = 1.0;
+
+      auto expected = std::sin(coeff * pi<>);
+      constexpr auto calc = spook::sin(coeff * pi<>);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      constexpr double coeff = 1.25;
+
+      auto expected = std::sin(coeff * pi<>);
+      constexpr auto calc = spook::sin(coeff * pi<>);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      constexpr double coeff = 1.5;
+
+      auto expected = std::sin(coeff * pi<>);
+      constexpr auto calc = spook::sin(coeff * pi<>);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      constexpr double coeff = 1.75;
+
+      auto expected = std::sin(coeff * pi<>);
+      constexpr auto calc = spook::sin(coeff * pi<>);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      constexpr double coeff = 2.0;
+
+      auto expected = std::sin(coeff * pi<>);
+      constexpr auto calc = spook::sin(coeff * pi<>);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+  }
+
+  TEST_CASE("cos test") {
+
+    using namespace spook::constant;
+    constexpr double eps = 1.0E-15;
+
+    {
+      constexpr double coeff = 0.0;
+
+      auto expected = std::cos(coeff * pi<>);
+      constexpr auto calc = spook::cos(coeff * pi<>);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      constexpr double coeff = 0.25;
+
+      auto expected = std::cos(coeff * pi<>);
+      constexpr auto calc = spook::cos(coeff * pi<>);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      constexpr double coeff = 0.5;
+
+      auto expected = std::cos(coeff * pi<>);
+      constexpr auto calc = spook::cos(coeff * pi<>);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      constexpr double coeff = 0.75;
+
+      auto expected = std::cos(coeff * pi<>);
+      constexpr auto calc = spook::cos(coeff * pi<>);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      constexpr double coeff = 1.0;
+
+      auto expected = std::cos(coeff * pi<>);
+      constexpr auto calc = spook::cos(coeff * pi<>);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      constexpr double coeff = 1.25;
+
+      auto expected = std::cos(coeff * pi<>);
+      constexpr auto calc = spook::cos(coeff * pi<>);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      constexpr double coeff = 1.5;
+
+      auto expected = std::cos(coeff * pi<>);
+      constexpr auto calc = spook::cos(coeff * pi<>);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      constexpr double coeff = 1.75;
+
+      auto expected = std::cos(coeff * pi<>);
+      constexpr auto calc = spook::cos(coeff * pi<>);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      constexpr double coeff = 2.0;
+
+      auto expected = std::cos(coeff * pi<>);
+      constexpr auto calc = spook::cos(coeff * pi<>);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+  }
+
+  TEST_CASE("atan test") {
+    constexpr double eps = 1.0E-15;
+
+    {
+      auto expected = 4.0 * std::atan(1.0);
+      constexpr auto pi = 4.0 * spook::atan(1.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), pi);
+    }
+
+    {
+      auto expected = std::atan(-1.0);
+      constexpr auto calc = spook::atan(-1.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::atan(-0.75);
+      constexpr auto calc = spook::atan(-0.75);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::atan(-0.5);
+      constexpr auto calc = spook::atan(-0.5);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::atan(-0.25);
+      constexpr auto calc = spook::atan(-0.25);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::atan(0.0);
+      constexpr auto calc = spook::atan(0.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::atan(0.25);
+      constexpr auto calc = spook::atan(0.25);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::atan(0.5);
+      constexpr auto calc = spook::atan(0.5);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::atan(0.75);
+      constexpr auto calc = spook::atan(0.75);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::atan(1.0);
+      constexpr auto calc = spook::atan(1.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+  }
+
+  TEST_CASE("atan2 test") {
+    constexpr double eps = 1.0E-15;
+
+    {
+      auto expected = std::atan2(0.0, 1.0);
+      constexpr auto calc = spook::atan2(0.0, 1.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::atan2(1.0, 1.0);
+      constexpr auto calc = spook::atan2(1.0, 1.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::atan2(1.0, 0.0);
+      constexpr auto calc = spook::atan2(1.0, 0.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::atan2(1.0, -1.0);
+      constexpr auto calc = spook::atan2(1.0, -1.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::atan2(0.0, -1.0);
+      constexpr auto calc = spook::atan2(0.0, -1.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::atan2(-1.0, -1.0);
+      constexpr auto calc = spook::atan2(-1.0, -1.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::atan2(-1.0, 0.0);
+      constexpr auto calc = spook::atan2(-1.0, 0.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::atan2(-1.0, 1.0);
+      constexpr auto calc = spook::atan2(-1.0, 1.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+  }
+
   TEST_CASE("float pow test")
   {
     constexpr double eps = 1.0E-15;
@@ -291,5 +642,201 @@ namespace spook_test::cmath {
       constexpr auto r = spook::pow(1000.0, 2.0);
       CHECK_EQ(expected, r);
     }
+  }
+
+  TEST_CASE("sqrt test") {
+    constexpr double eps = 1.0E-15;
+    
+    {
+      constexpr auto calc = spook::sqrt(-2.0);
+
+      CHECK_UNARY(spook::isnan(calc));
+    }
+
+    {
+      auto expected = std::sqrt(2.0);
+      constexpr auto calc = spook::sqrt(2.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::sqrt(3.0);
+      constexpr auto calc = spook::sqrt(3.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::sqrt(4.0);
+      constexpr auto calc = spook::sqrt(4.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::sqrt(8.0);
+      constexpr auto calc = spook::sqrt(8.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::sqrt(16.0);
+      constexpr auto calc = spook::sqrt(16.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::sqrt(32.0);
+      constexpr auto calc = spook::sqrt(32.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::sqrt(64.0);
+      constexpr auto calc = spook::sqrt(64.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::sqrt(128.0);
+      constexpr auto calc = spook::sqrt(128.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(1.0E-14), calc);
+    }
+
+    {
+      auto expected = std::sqrt(256.0);
+      constexpr auto calc = spook::sqrt(256.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(1.0E-14), calc);
+    }
+
+    {
+      auto expected = std::sqrt(512.0);
+      constexpr auto calc = spook::sqrt(512.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(1.0E-14), calc);
+    }
+
+    {
+      auto expected = std::sqrt(1024.0);
+      constexpr auto calc = spook::sqrt(1024.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(1.0E-14), calc);
+    }
+  }
+
+  TEST_CASE("cbrt test") {
+    constexpr double eps = 1.0E-15;
+
+    {
+      constexpr auto calc = spook::cbrt(-2.0);
+
+      CHECK_UNARY(spook::isnan(calc));
+    }
+
+    {
+      auto expected = std::cbrt(2.0);
+      constexpr auto calc = spook::cbrt(2.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::cbrt(3.0);
+      constexpr auto calc = spook::cbrt(3.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::cbrt(4.0);
+      constexpr auto calc = spook::cbrt(4.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::cbrt(8.0);
+      constexpr auto calc = spook::cbrt(8.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::cbrt(16.0);
+      constexpr auto calc = spook::cbrt(16.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::cbrt(32.0);
+      constexpr auto calc = spook::cbrt(32.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::cbrt(64.0);
+      constexpr auto calc = spook::cbrt(64.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(eps), calc);
+    }
+
+    {
+      auto expected = std::cbrt(128.0);
+      constexpr auto calc = spook::cbrt(128.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(1.0E-14), calc);
+    }
+
+    {
+      auto expected = std::cbrt(256.0);
+      constexpr auto calc = spook::cbrt(256.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(1.0E-14), calc);
+    }
+
+    {
+      auto expected = std::cbrt(512.0);
+      constexpr auto calc = spook::cbrt(512.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(1.0E-14), calc);
+    }
+
+    {
+      auto expected = std::cbrt(1024.0);
+      constexpr auto calc = spook::cbrt(1024.0);
+
+      CHECK_EQ(doctest::Approx(expected).epsilon(1.0E-14), calc);
+    }
+  }
+
+  TEST_CASE("lerp test") {
+    constexpr double start = 0.0;
+    constexpr double end = 10.0;
+    constexpr double eps = 1.0E-14;
+
+    CHECK_EQ(doctest::Approx(start), spook::lerp(start, end, 0.0));
+    CHECK_EQ(doctest::Approx(1.0).epsilon(eps), spook::lerp(start, end, 0.1));
+    CHECK_EQ(doctest::Approx(2.0).epsilon(eps), spook::lerp(start, end, 0.2));
+    CHECK_EQ(doctest::Approx(3.0).epsilon(eps), spook::lerp(start, end, 0.3));
+    CHECK_EQ(doctest::Approx(4.0).epsilon(eps), spook::lerp(start, end, 0.4));
+    CHECK_EQ(doctest::Approx(5.0).epsilon(eps), spook::lerp(start, end, 0.5));
+    CHECK_EQ(doctest::Approx(6.0).epsilon(eps), spook::lerp(start, end, 0.6));
+    CHECK_EQ(doctest::Approx(7.0).epsilon(eps), spook::lerp(start, end, 0.7));
+    CHECK_EQ(doctest::Approx(8.0).epsilon(eps), spook::lerp(start, end, 0.8));
+    CHECK_EQ(doctest::Approx(9.0).epsilon(eps), spook::lerp(start, end, 0.9));
+    CHECK_EQ(doctest::Approx(end), spook::lerp(start, end, 1.0));
+    CHECK_EQ(doctest::Approx(15.0).epsilon(eps), spook::lerp(start, end, 1.5));
+    CHECK_EQ(doctest::Approx(20.0).epsilon(eps), spook::lerp(start, end, 2.0));
+
+    CHECK_EQ(doctest::Approx(end), spook::lerp(end, end, 2.0));
   }
 }

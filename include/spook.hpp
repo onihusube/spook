@@ -154,7 +154,7 @@ namespace spook {
 		inline namespace constant {
 
 			template<typename T = double>
-			inline constexpr T π = T(3.1415926535897932384626433832795L);
+			inline constexpr T pi = T(3.1415926535897932384626433832795L);
 
 
 			template<typename T = double>
@@ -166,37 +166,37 @@ namespace spook {
 			SPOOK_CONSTEVAL auto operator""_radf(long double degree) -> float {
 				using ld = long double;
 
-				return float(degree / ld(180.0) * π<ld>);
+				return float(degree / ld(180.0) * pi<ld>);
 			}
 
 			SPOOK_CONSTEVAL auto operator""_degf(long double radian) -> float {
 				using ld = long double;
 
-				return float(radian / π<ld> * ld(180.0));
+				return float(radian / pi<ld> * ld(180.0));
 			}
 
 			SPOOK_CONSTEVAL auto operator""_rad(long double degree) -> double {
 				using ld = long double;
 
-				return double(degree / ld(180.0) * π<ld>);
+				return double(degree / ld(180.0) * pi<ld>);
 			}
 
 			SPOOK_CONSTEVAL auto operator""_deg(long double radian) -> double {
 				using ld = long double;
 
-				return double(radian / π<ld> * ld(180.0));
+				return double(radian / pi<ld> * ld(180.0));
 			}
 
 			SPOOK_CONSTEVAL auto operator""_radld(long double degree) -> long double {
 				using ld = long double;
 
-				return degree / ld(180.0) * π<ld>;
+				return degree / ld(180.0) * pi<ld>;
 			}
 
 			SPOOK_CONSTEVAL auto operator""_degld(long double radian) -> long double {
 				using ld = long double;
 
-				return radian / π<ld> * ld(180.0);
+				return radian / pi<ld> * ld(180.0);
 			}
 		}
 
@@ -419,30 +419,30 @@ namespace spook {
 		namespace detail {
 			
 			/**
-			* @brief 三角関数の入力を[0, π]の範囲に収める
+			* @brief 三角関数の入力を[0, pi]の範囲に収める
 			* @param theta θ[rad]
-			* @return {[0, π]に収めたθ, 象限の情報（πの奇数倍の時true）}
+			* @return {[0, pi]に収めたθ, 象限の情報（piの奇数倍の時true）}
 			*/
 			template<typename T>
 			SPOOK_CONSTEVAL auto reduce_theta(T theta) -> std::pair<T, bool> {
 				auto x = spook::fabs(theta);
 
-				if (0.0 <= x && x < constant::π<T>) {
+				if (0.0 <= x && x < constant::pi<T>) {
 					//ごちゃごちゃ計算する必要はない
 					return { x, false };
 				}
 
 				//実質的にはこれ、ただし商も欲しかったので展開している
-				//spook::fmod(spook::fabs(theta), constant::π<T>);
+				//spook::fmod(spook::fabs(theta), constant::pi<T>);
 
-				auto n = spook::trunc(spook::fabs(x) / constant::π<T>);
-				auto r = x - n * constant::π<T>;
-				if (spook::signbit(r)) r += constant::π<T>;
+				auto n = spook::trunc(spook::fabs(x) / constant::pi<T>);
+				auto r = x - n * constant::pi<T>;
+				if (spook::signbit(r)) r += constant::pi<T>;
 
-				//象限の情報を得る、余りがゼロということはπの整数倍の時
+				//象限の情報を得る、余りがゼロということはpiの整数倍の時
 				//bool isodd = (r == 0.0) ? false : spook::fmod(n, T(2.0)) == T(1.0);
 
-				//[0, π]に押し込めた数と象限の情報
+				//[0, pi]に押し込めた数と象限の情報
 				return { r, spook::fmod(n, T(2.0)) == T(1.0) };
 			}
 		}
@@ -457,7 +457,7 @@ namespace spook {
 
 			auto [theta, isodd] = detail::reduce_theta(arg);
 
-			//πの整数倍の時
+			//piの整数倍の時
 			if (theta == 0.0) return 0.0;
 
 			T x_sq = -(theta * theta);
@@ -492,8 +492,8 @@ namespace spook {
 
 			auto [theta, isodd] = detail::reduce_theta(arg);
 
-			//π/2の整数倍の時
-			if (theta == 0.5 * constant::π<T>) return 0.0;
+			//pi/2の整数倍の時
+			if (theta == 0.5 * constant::pi<T>) return 0.0;
 
 			T x_sq = -(theta * theta);
 			T series = T(1.0);
@@ -525,8 +525,8 @@ namespace spook {
 
 			auto[theta, isodd] = detail::reduce_theta(arg);
 
-			//π/2の整数倍の時
-			if (theta == 0.5 * constant::π<T>) return spook::numeric_limits_traits<T>::infinity();
+			//pi/2の整数倍の時
+			if (theta == 0.5 * constant::pi<T>) return spook::numeric_limits_traits<T>::infinity();
 
 			auto sin_v = spook::sin(theta);
 			auto cos_v = spook::cos(theta);
@@ -573,14 +573,14 @@ namespace spook {
 				if (T(1.0) < spook::fabs(arg)) return spook::numeric_limits_traits<T>::quiet_NaN();
 			}
 
-			return T(0.5) * constant::π<T>* spook::asin(arg);
+			return T(0.5) * constant::pi<T>* spook::asin(arg);
 		}
 
 		template<typename T>
 		SPOOK_CONSTEVAL auto atan(T arg) -> T {
 			if (spook::numeric_limits_traits<T>::is_iec559) {
-				if (arg == T(0.0)) return T(1.0);
-				if (spook::isinf(arg)) return spook::copysign(spook::constant::π<T> / 2.0, arg);
+				if (spook::iszero(arg)) return arg;
+				if (spook::isinf(arg)) return spook::copysign(spook::constant::pi<T> / 2.0, arg);
 			}
 
 			//0 < x の所で計算
@@ -614,7 +614,7 @@ namespace spook {
 			if (spook::numeric_limits_traits<T>::is_iec559) {
 				if (spook::iszero(y)) {
 					if (spook::signbit(x)) {
-						return spook::copysign(spook::constant::π<T>, y);
+						return spook::copysign(spook::constant::pi<T>, y);
 					}
 					else {
 						return spook::copysign(T(0.0), y);
@@ -622,25 +622,25 @@ namespace spook {
 				}
 
 				if (spook::iszero(x)) {
-					return spook::copysign(spook::constant::π<T> / T(2.0), y);
+					return spook::copysign(spook::constant::pi<T> / T(2.0), y);
 				}
 
 				if (spook::isinf(y)) {
 					if (spook::isinf(x)) {
 						if (spook::signbit(x)) {
-							return spook::copysign(T(3.0) * spook::constant::π<T> / T(4.0), y);
+							return spook::copysign(T(3.0) * spook::constant::pi<T> / T(4.0), y);
 						}
 						else {
-							return spook::copysign(spook::constant::π<T> / T(4.0), y);
+							return spook::copysign(spook::constant::pi<T> / T(4.0), y);
 						}
 					}
 
-					return spook::copysign(spook::constant::π<T> / T(2.0), y);
+					return spook::copysign(spook::constant::pi<T> / T(2.0), y);
 				}
 				else {
 					if (spook::isinf(x)) {
 						if (spook::signbit(x)) {
-							return spook::copysign(spook::constant::π<T>, y);
+							return spook::copysign(spook::constant::pi<T>, y);
 						}
 						else {
 							return spook::copysign(T(0.0), y);
@@ -656,10 +656,10 @@ namespace spook {
 			}
 
 			if (spook::signbit(y)) {
-				return atan_v - spook::constant::π<T>;
+				return atan_v - spook::constant::pi<T>;
 			}
 
-			return atan_v + spook::constant::π<T>;
+			return atan_v + spook::constant::pi<T>;
 		}
 
 		namespace detail {

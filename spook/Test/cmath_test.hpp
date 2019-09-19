@@ -287,8 +287,8 @@ namespace spook_test::cmath {
 			{
 				constexpr double coeff = 0.0;
 
-				auto expected = std::sin(coeff * π<>);
-				constexpr auto calc = spook::sin(coeff * π<>);
+				auto expected = std::sin(coeff * pi<>);
+				constexpr auto calc = spook::sin(coeff * pi<>);
 
 				Assert::AreEqual(expected, calc, 1.0E-15);
 			}
@@ -296,8 +296,8 @@ namespace spook_test::cmath {
 			{
 				constexpr double coeff = 0.25;
 
-				auto expected = std::sin(coeff * π<>);
-				constexpr auto calc = spook::sin(coeff * π<>);
+				auto expected = std::sin(coeff * pi<>);
+				constexpr auto calc = spook::sin(coeff * pi<>);
 
 				Assert::AreEqual(expected, calc, 1.0E-15);
 			}
@@ -305,8 +305,8 @@ namespace spook_test::cmath {
 			{
 				constexpr double coeff = 0.5;
 
-				auto expected = std::sin(coeff * π<>);
-				constexpr auto calc = spook::sin(coeff * π<>);
+				auto expected = std::sin(coeff * pi<>);
+				constexpr auto calc = spook::sin(coeff * pi<>);
 
 				Assert::AreEqual(expected, calc, 1.0E-15);
 			}
@@ -314,8 +314,8 @@ namespace spook_test::cmath {
 			{
 				constexpr double coeff = 0.75;
 
-				auto expected = std::sin(coeff * π<>);
-				constexpr auto calc = spook::sin(coeff * π<>);
+				auto expected = std::sin(coeff * pi<>);
+				constexpr auto calc = spook::sin(coeff * pi<>);
 
 				Assert::AreEqual(expected, calc, 1.0E-15);
 			}
@@ -323,8 +323,8 @@ namespace spook_test::cmath {
 			{
 				constexpr double coeff = 1.0;
 
-				auto expected = std::sin(coeff * π<>);
-				constexpr auto calc = spook::sin(coeff * π<>);
+				auto expected = std::sin(coeff * pi<>);
+				constexpr auto calc = spook::sin(coeff * pi<>);
 
 				Assert::AreEqual(expected, calc, 1.0E-15);
 			}
@@ -332,8 +332,8 @@ namespace spook_test::cmath {
 			{
 				constexpr double coeff = 1.25;
 
-				auto expected = std::sin(coeff * π<>);
-				constexpr auto calc = spook::sin(coeff * π<>);
+				auto expected = std::sin(coeff * pi<>);
+				constexpr auto calc = spook::sin(coeff * pi<>);
 
 				Assert::AreEqual(expected, calc, 1.0E-15);
 			}
@@ -341,8 +341,8 @@ namespace spook_test::cmath {
 			{
 				constexpr double coeff = 1.5;
 
-				auto expected = std::sin(coeff * π<>);
-				constexpr auto calc = spook::sin(coeff * π<>);
+				auto expected = std::sin(coeff * pi<>);
+				constexpr auto calc = spook::sin(coeff * pi<>);
 
 				Assert::AreEqual(expected, calc, 1.0E-15);
 			}
@@ -350,8 +350,8 @@ namespace spook_test::cmath {
 			{
 				constexpr double coeff = 1.75;
 
-				auto expected = std::sin(coeff * π<>);
-				constexpr auto calc = spook::sin(coeff * π<>);
+				auto expected = std::sin(coeff * pi<>);
+				constexpr auto calc = spook::sin(coeff * pi<>);
 
 				Assert::AreEqual(expected, calc, 1.0E-15);
 			}
@@ -359,8 +359,8 @@ namespace spook_test::cmath {
 			{
 				constexpr double coeff = 2.0;
 
-				auto expected = std::sin(coeff * π<>);
-				constexpr auto calc = spook::sin(coeff * π<>);
+				auto expected = std::sin(coeff * pi<>);
+				constexpr auto calc = spook::sin(coeff * pi<>);
 
 				Assert::AreEqual(expected, calc, 1.0E-15);
 			}
@@ -373,8 +373,8 @@ namespace spook_test::cmath {
 			{
 				constexpr double coeff = 0.0;
 
-				auto expected = std::cos(coeff * π<>);
-				constexpr auto calc = spook::cos(coeff * π<>);
+				auto expected = std::cos(coeff * pi<>);
+				constexpr auto calc = spook::cos(coeff * pi<>);
 
 				Assert::AreEqual(expected, calc, 1.0E-15);
 			}
@@ -382,8 +382,8 @@ namespace spook_test::cmath {
 			{
 				constexpr double coeff = 0.25;
 
-				auto expected = std::cos(coeff * π<>);
-				constexpr auto calc = spook::cos(coeff * π<>);
+				auto expected = std::cos(coeff * pi<>);
+				constexpr auto calc = spook::cos(coeff * pi<>);
 
 				Assert::AreEqual(expected, calc, 1.0E-15);
 			}
@@ -391,8 +391,8 @@ namespace spook_test::cmath {
 			{
 				constexpr double coeff = 0.5;
 
-				auto expected = std::cos(coeff * π<>);
-				constexpr auto calc = spook::cos(coeff * π<>);
+				auto expected = std::cos(coeff * pi<>);
+				constexpr auto calc = spook::cos(coeff * pi<>);
 
 				Assert::AreEqual(expected, calc, 1.0E-15);
 			}
@@ -400,8 +400,8 @@ namespace spook_test::cmath {
 			{
 				constexpr double coeff = 0.75;
 
-				auto expected = std::cos(coeff * π<>);
-				constexpr auto calc = spook::cos(coeff * π<>);
+				auto expected = std::cos(coeff * pi<>);
+				constexpr auto calc = spook::cos(coeff * pi<>);
 
 				Assert::AreEqual(expected, calc, 1.0E-15);
 			}
@@ -409,8 +409,8 @@ namespace spook_test::cmath {
 			{
 				constexpr double coeff = 1.0;
 
-				auto expected = std::cos(coeff * π<>);
-				constexpr auto calc = spook::cos(coeff * π<>);
+				auto expected = std::cos(coeff * pi<>);
+				constexpr auto calc = spook::cos(coeff * pi<>);
 
 				Assert::AreEqual(expected, calc, 1.0E-15);
 			}
@@ -418,8 +418,8 @@ namespace spook_test::cmath {
 			{
 				constexpr double coeff = 1.25;
 
-				auto expected = std::cos(coeff * π<>);
-				constexpr auto calc = spook::cos(coeff * π<>);
+				auto expected = std::cos(coeff * pi<>);
+				constexpr auto calc = spook::cos(coeff * pi<>);
 
 				Assert::AreEqual(expected, calc, 1.0E-15);
 			}
@@ -427,8 +427,8 @@ namespace spook_test::cmath {
 			{
 				constexpr double coeff = 1.5;
 
-				auto expected = std::cos(coeff * π<>);
-				constexpr auto calc = spook::cos(coeff * π<>);
+				auto expected = std::cos(coeff * pi<>);
+				constexpr auto calc = spook::cos(coeff * pi<>);
 
 				Assert::AreEqual(expected, calc, 1.0E-15);
 			}
@@ -436,8 +436,8 @@ namespace spook_test::cmath {
 			{
 				constexpr double coeff = 1.75;
 
-				auto expected = std::cos(coeff * π<>);
-				constexpr auto calc = spook::cos(coeff * π<>);
+				auto expected = std::cos(coeff * pi<>);
+				constexpr auto calc = spook::cos(coeff * pi<>);
 
 				Assert::AreEqual(expected, calc, 1.0E-15);
 				//Assert::AreEqual(expected, calc, 1.0E-14);
@@ -446,8 +446,8 @@ namespace spook_test::cmath {
 			{
 				constexpr double coeff = 2.0;
 
-				auto expected = std::cos(coeff * π<>);
-				constexpr auto calc = spook::cos(coeff * π<>);
+				auto expected = std::cos(coeff * pi<>);
+				constexpr auto calc = spook::cos(coeff * pi<>);
 
 				Assert::AreEqual(expected, calc, 1.0E-15);
 				//Assert::AreEqual(expected, calc, 1.0E-14);
@@ -457,7 +457,7 @@ namespace spook_test::cmath {
 		TEST_METHOD(tan_test) {
 			using namespace spook::constant;
 
-			constexpr auto t = spook::tan(π<> / 2.1);
+			constexpr auto t = spook::tan(pi<> / 2.1);
 		}
 
 		TEST_METHOD(asin_test) {
