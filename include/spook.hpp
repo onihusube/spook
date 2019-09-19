@@ -1104,6 +1104,11 @@ namespace spook {
 			//log2p1はすなわち最上位ビットの位置！
 			return T(spook::msb_pos(x));
 		}
+
+		template<typename R = std::uint64_t CONCEPT_FALLBACK(std::unsigned_integral<R>, enabler<type_traits::is_unsigned<R>>)>
+		SPOOK_CONSTEVAL auto pow2(unsigned int n) -> R {
+			return R(1) << n;
+		}
 	}
 
 	inline namespace functional {

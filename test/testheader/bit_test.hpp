@@ -170,4 +170,14 @@ namespace spook_test::bit {
 		CHECK_EQ(32u, spook::log2p1(0xF30cf328u));
 		CHECK_EQ(64u, spook::log2p1(0xFF043802abcf9328u));
 	}
+
+	TEST_CASE("pow2 test") {
+		CHECK_EQ(1, spook::pow2(0));
+		CHECK_EQ(2, spook::pow2(1));
+		CHECK_EQ(0x0000000000000080, spook::pow2(7));
+		CHECK_EQ(0x0000000000008000, spook::pow2(15));
+		CHECK_EQ(0x0000000080000000, spook::pow2(31));
+		CHECK_EQ(0x8000000000000000, spook::pow2(63));
+		CHECK_EQ(0x0000000000200000, spook::pow2(21));
+	}
 }
