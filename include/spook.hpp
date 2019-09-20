@@ -1115,45 +1115,57 @@ namespace spook {
 
 		namespace detail {
 
-			template<typename F, typename T, typename... Args, enabler<std::is_base_of<memberptr_to_t<F>, std::remove_cvref_t<T>>, is_member_of_decay<F, T>> = nullptr>
+			template<typename T>
+			struct is_reference_wrapper : std::false_type {};
+			
+			template<typename T>
+			struct is_reference_wrapper<std::reference_wrapper<T>> : std::true_type {};
+
+			template<typename T>
+			inline constexpr bool is_reference_wrapper_v = detail::is_reference_wrapper<T>::value;
+
+			template<typename F, typename T, typename... Args>
 			SPOOK_CONSTEVAL auto invoke_memfn(F&& f, T&& t1, Args&&... args) {
-				return (std::forward<T>(t1).*f)(std::forward<Args>(args)...);
+				using prime_t = std::remove_cvref_t<decltype(t1)>;
+
+				if constexpr (std::is_base_of_v<type_traits::memberptr_to_t<F>, prime_t>) {
+					return (std::forward<T>(t1).*f)(std::forward<Args>(args)...);
+				}
+				else if constexpr (detail::is_reference_wrapper_v<prime_t>) {
+					return (std::forward<T>(t1).get().*f)(std::forward<Args>(args)...);
+				} else {
+					return ((*std::forward<T>(t1)).*f)(std::forward<Args>(args)...);
+				}
 			}
 
-			template<typename F, typename T, typename... Args, disabler<std::is_base_of<memberptr_to_t<F>, std::remove_cvref_t<T>>, is_member_of_decay<F, T>> = nullptr>
-			SPOOK_CONSTEVAL auto invoke_memfn(F&& f, T&& t1, Args&&... args) {
-				return ((*std::forward<T>(t1)).*f)(std::forward<Args>(args)...);
-			}
-
-			template<typename F, typename T, enabler<std::is_base_of<memberptr_to_t<F>, std::remove_cvref_t<T>>, is_member_of_decay<F, T>> = nullptr>
+			template<typename F, typename T>
 			SPOOK_CONSTEVAL auto invoke_memobj(F&& f, T&& t1) {
-				return (std::forward<T>(t1).*f);
-			}
+				using prime_t = std::remove_cvref_t<decltype(t1)>;
 
-			template<typename F, typename T, disabler<std::is_base_of<memberptr_to_t<F>, std::remove_cvref_t<T>>, is_member_of_decay<F, T>> = nullptr>
-			SPOOK_CONSTEVAL auto invoke_memobj(F&& f, T&& t1) {
-				return ((*std::forward<T>(t1)).*f);
-			}
-
-			template<typename F, typename... Args, enabler<std::is_member_function_pointer<std::remove_cvref_t<F>>> = nullptr, disabler<std::is_member_object_pointer<std::remove_cvref_t<F>>> = nullptr>
-			SPOOK_CONSTEVAL auto invoke_impl(F&& f, Args&&... args) {
-				return invoke_memfn(std::forward<F>(f), std::forward<Args>(args)...);
-			}
-
-			template<typename F, typename Arg, enabler<std::is_member_object_pointer<std::remove_cvref_t<F>>> = nullptr, disabler<std::is_member_function_pointer<std::remove_cvref_t<F>>> = nullptr>
-			SPOOK_CONSTEVAL auto invoke_impl(F&& f, Arg&& arg) {
-				return invoke_memobj(std::forward<F>(f), std::forward<Arg>(arg));
-			}
-
-			template<typename F, typename... Args, disabler<std::is_member_pointer<std::remove_cvref_t<F>>> = nullptr>
-			SPOOK_CONSTEVAL auto invoke_impl(F&& f, Args&&... args) {
-				return std::forward<F>(f)(std::forward<Args>(args)...);
+				if constexpr (std::is_base_of_v<type_traits::memberptr_to_t<F>, prime_t>) {
+					return std::forward<T>(t1).*f;
+				} else if constexpr (detail::is_reference_wrapper_v<prime_t>) {
+					return std::forward<T>(t1).get().*f;
+				} else {
+					return (*std::forward<T>(t1)).*f;
+				}
 			}
 		}
 
 		template<typename F, typename... Args>
-		SPOOK_CONSTEVAL auto invoke(F&& f, Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>) -> std::invoke_result_t<F, Args...> {
-			return detail::invoke_impl(std::forward<F>(f), std::forward<Args>(args)...);
+		SPOOK_CONSTEVAL auto invoke(F&& f, Args&&... args) -> std::invoke_result_t<F, Args...> {
+			using prime_t = std::remove_cvref_t<F>;
+
+			if constexpr (std::is_member_function_pointer_v<prime_t>) {
+				//メンバポインタ呼び出し
+				return detail::invoke_memfn(std::forward<F>(f), std::forward<Args>(args)...);
+			} else if constexpr (sizeof...(Args) == 1 && std::is_member_object_pointer_v<prime_t>) {
+				//メンバオブジェクト呼び出し
+				return detail::invoke_memobj(std::forward<F>(f), std::forward<Args>(args)...);
+			} else {
+				//その他関数呼び出し
+				return std::forward<F>(f)(std::forward<Args>(args)...);
+			}
 		}
 	}
 }
