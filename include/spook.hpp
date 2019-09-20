@@ -49,7 +49,20 @@ namespace spook {
 
 		template<typename T>
 		inline constexpr bool is_integral_v = spook::is_integral<T>::value;
-	}
+
+		/**
+		* @brief 符号なし整数型かどうかを調べる
+		* @detail これは組み込み型等のためのもの
+		* @detail 任意の型に対しては明示的特殊化によってアダプトする
+		*/
+		template <typename T>
+		struct is_unsigned : std::conjunction<
+			spook::is_integral<T>,
+			std::negation<std::is_signed<T>>
+		> {};
+
+
+	} // namespace customization_points
 }
 
 
@@ -63,6 +76,9 @@ namespace spook {
 
 		template<typename T>
 		concept floating_point = spook::is_floating_point<T>::value;
+
+		template<typename T>
+		concept unsigned_integral = spook::is_unsigned<T>::value;
 	}
 }
 #else 
@@ -79,31 +95,6 @@ namespace spook {
 		*/
 		template<typename... Ts>
 		using enabler = std::enable_if_t<std::conjunction_v<Ts...>, std::nullptr_t>;
-
-		/**
-		* @brief 条件が全てtrueの時に無効化
-		*/
-		template<typename... Ts>
-		using disabler = std::enable_if_t<!std::conjunction_v<Ts...>, std::nullptr_t>;
-
-		/**
-		* @brief 整数型でない型がmake_unsigned_tに入力されると型名としてill-formedになるのでその対策に構造体内に埋め込んで表面に出ないようにしている
-		*/
-		template<typename T>
-		struct check_unsigned : std::is_same<T, std::make_unsigned_t<T>> {};
-
-		/**
-		* @brief 符号なし整数型かどうかを調べる
-		* @detail 任意の型に対しては明示的特殊化によってアダプトする
-		*/
-		template<typename T>
-		struct is_unsigned : std::conjunction<
-								 std::is_integral<T>,
-								 std::disjunction<
-								 	std::is_same<T, std::size_t>, 
-									check_unsigned<T>
-								 >
-							 > {};
 
 		/**
 		* @brief あるメンバポインタがある型のメンバを指すものであるかを調べる
@@ -145,7 +136,7 @@ namespace spook {
 		* @tparam MemberPtr メンバポインタ
 		*/
 		template<typename MemberPtr>
-		using memberptr_to_t = typename memberptr_to<std::remove_cvref_t<MemberPtr>>::type;
+		using memberptr_to_t = typename memberptr_to<MemberPtr>::type;
 	}
 }
 
@@ -894,7 +885,7 @@ namespace spook {
 		* @param x LSB位置を求める値
 		* @return LSBの位置（x == 0なら0）
 		*/
-		template <typename T CONCEPT_FALLBACK(std::unsigned_integral<T, enabler<type_traits::is_unsigned<T>>)>
+		template <typename T CONCEPT_FALLBACK(spook::unsigned_integral<T, enabler<is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto msb_pos(T x) -> int {
 			if (x == T(0)) return 0;
 			//最上位ビットだけを残す
@@ -911,7 +902,7 @@ namespace spook {
 		* @param x MSB位置を求める値
 		* @return MSBの位置（x == 0なら0）
 		*/
-		template <typename T CONCEPT_FALLBACK(std::unsigned_integral<T, enabler<type_traits::is_unsigned<T>>)>
+		template <typename T CONCEPT_FALLBACK(spook::unsigned_integral<T, enabler<is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto lsb_pos(T x) -> int
 		{
 			if (x == T(0)) return 0;
@@ -958,12 +949,12 @@ namespace spook {
 			}
 		}
 
-		template <typename T CONCEPT_FALLBACK(std::unsigned_integral<T, enabler<type_traits::is_unsigned<T>>)>
+		template <typename T CONCEPT_FALLBACK(spook::unsigned_integral<T, enabler<is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto is_pow2(T x) -> bool {
 			return x && !(x & (x - 1));
 		}
 
-		template <typename T CONCEPT_FALLBACK(std::unsigned_integral<T, enabler<type_traits::is_unsigned<T>>)>
+		template <typename T CONCEPT_FALLBACK(spook::unsigned_integral<T, enabler<is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto popcount(T x) -> int {
 			if constexpr (spook::is_pow2(sizeof(T))) {
 				return detail::popcount_impl(std::uint64_t(x));
@@ -1022,16 +1013,16 @@ namespace spook {
 			SPOOK_CONSTEVAL auto bit_reverse_impl(T x) = delete;
 		} // namespace detail
 
-		template <typename T CONCEPT_FALLBACK(std::unsigned_integral<T, enabler<type_traits::is_unsigned<T>>)>
+		template <typename T CONCEPT_FALLBACK(spook::unsigned_integral<T, enabler<is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto bit_reverse(T x) -> T {
 			//各型用の二分再帰による実装に移譲
 			return detail::bit_reverse_impl(x);
 		}
 
-		template<typename T CONCEPT_FALLBACK(std::unsigned_integral<T, enabler<type_traits::is_unsigned<T>>)>
+		template<typename T CONCEPT_FALLBACK(spook::unsigned_integral<T, enabler<is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto rotl(T x, int s) -> T;
 
-		template<typename T CONCEPT_FALLBACK(std::unsigned_integral<T, enabler<type_traits::is_unsigned<T>>)>
+		template<typename T CONCEPT_FALLBACK(spook::unsigned_integral<T, enabler<is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto rotr(T x, int s) -> T {
 			constexpr auto N = sizeof(T) * CHAR_BIT;
 			const int r = s % N;
@@ -1041,7 +1032,7 @@ namespace spook {
 			return (x >> r) | (x << (N - r));
 		}
 
-		template<typename T CONCEPT_FALLBACK_REDECL(std::unsigned_integral<T, enabler<type_traits::is_unsigned<T>>)>
+		template<typename T CONCEPT_FALLBACK_REDECL(spook::unsigned_integral<T, enabler<is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto rotl(T x, int s) -> T {
 			constexpr auto N = sizeof(T) * CHAR_BIT;
 			const int r = s % N;
@@ -1051,7 +1042,7 @@ namespace spook {
 			return (x << r) | (x >> (N - r));
 		}
 
-		template<typename T CONCEPT_FALLBACK(std::unsigned_integral<T, enabler<type_traits::is_unsigned<T>>)>
+		template<typename T CONCEPT_FALLBACK(spook::unsigned_integral<T, enabler<is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto countr_zero(T x) -> int {
 			if (x == 0) return sizeof(T) * CHAR_BIT;
 
@@ -1059,14 +1050,14 @@ namespace spook {
 			return --n;
 		}
 
-		template<typename T CONCEPT_FALLBACK(std::unsigned_integral<T, enabler<type_traits::is_unsigned<T>>)>
+		template<typename T CONCEPT_FALLBACK(spook::unsigned_integral<T, enabler<is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto countr_one(T x) -> int {
 			if (x == 0) return 0;
 
 			return spook::countr_zero(~x);
 		}
 
-		template<typename T CONCEPT_FALLBACK(std::unsigned_integral<T, enabler<type_traits::is_unsigned<T>>)>
+		template<typename T CONCEPT_FALLBACK(spook::unsigned_integral<T, enabler<is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto countl_zero(T x) -> int {
 			if (x == 0) return sizeof(T) * CHAR_BIT;
 
@@ -1074,13 +1065,13 @@ namespace spook {
 			return (sizeof(T) * CHAR_BIT) - n;
 		}
 
-		template<typename T CONCEPT_FALLBACK(std::unsigned_integral<T, enabler<type_traits::is_unsigned<T>>)>
+		template<typename T CONCEPT_FALLBACK(spook::unsigned_integral<T, enabler<is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto countl_one(T x) -> int{
 			if (x == 0) return 0;
 			return spook::countl_zero(~x);
 		}
 
-		template<typename T CONCEPT_FALLBACK(std::unsigned_integral<T, enabler<type_traits::is_unsigned<T>>)>
+		template<typename T CONCEPT_FALLBACK(spook::unsigned_integral<T, enabler<is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto ceil2(T x) -> T {
 			if (x == T(0)) return T(1);
 
@@ -1091,7 +1082,7 @@ namespace spook {
 			return ++v;
 		}
 
-		template<typename T CONCEPT_FALLBACK(std::unsigned_integral<T, enabler<type_traits::is_unsigned<T>>)>
+		template<typename T CONCEPT_FALLBACK(spook::unsigned_integral<T, enabler<is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto floor2(T x) -> T {
 			if (x == T(0)) return T(0);
 
@@ -1099,13 +1090,13 @@ namespace spook {
 			return v ^ (v >> 1);	//最上位ビットだけを残す
 		}
 
-		template <typename T CONCEPT_FALLBACK(std::unsigned_integral<T, enabler<type_traits::is_unsigned<T>>)>
+		template <typename T CONCEPT_FALLBACK(spook::unsigned_integral<T, enabler<is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto log2p1(T x) -> T {
 			//log2p1はすなわち最上位ビットの位置！
 			return T(spook::msb_pos(x));
 		}
 
-		template<typename R = std::uint64_t CONCEPT_FALLBACK(std::unsigned_integral<R, enabler<type_traits::is_unsigned<R>>)>
+		template<typename R = std::uint64_t CONCEPT_FALLBACK(spook::unsigned_integral<R, enabler<is_unsigned<R>>)>
 		SPOOK_CONSTEVAL auto pow2(unsigned int n) -> R {
 			return R(1) << n;
 		}
