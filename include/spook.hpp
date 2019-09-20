@@ -121,10 +121,11 @@ namespace spook {
 		template<typename MemberPtr>
 		struct memberptr_to;
 
-		template<typename T, typename R, typename... Args>
-		struct memberptr_to<R(T::*)(Args...)> {
-			using type = T;
-		};
+		// 要らないらしい
+		// template<typename T, typename R, typename... Args>
+		// struct memberptr_to<R(T::*)(Args...)> {
+		// 	using type = T;
+		// };
 
 		template<typename T, typename U>
 		struct memberptr_to<U T::*> {
@@ -1116,7 +1117,7 @@ namespace spook {
 			inline constexpr bool is_reference_wrapper_v = detail::is_reference_wrapper<T>::value;
 
 			template<typename F, typename T, typename... Args>
-			SPOOK_CONSTEVAL auto invoke_memfn(F&& f, T&& t1, Args&&... args) {
+			SPOOK_CONSTEVAL decltype(auto) invoke_memfn(F&& f, T&& t1, Args&&... args) {
 				using prime_t = std::remove_cvref_t<decltype(t1)>;
 
 				if constexpr (std::is_base_of_v<type_traits::memberptr_to_t<F>, prime_t>) {
@@ -1129,8 +1130,8 @@ namespace spook {
 				}
 			}
 
-			template<typename F, typename T>
-			SPOOK_CONSTEVAL auto invoke_memobj(F&& f, T&& t1) {
+			template <typename F, typename T>
+			SPOOK_CONSTEVAL decltype(auto) invoke_memobj(F &&f, T &&t1) {
 				using prime_t = std::remove_cvref_t<decltype(t1)>;
 
 				if constexpr (std::is_base_of_v<type_traits::memberptr_to_t<F>, prime_t>) {
