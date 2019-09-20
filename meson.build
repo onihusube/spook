@@ -8,7 +8,7 @@ cppcompiler = meson.get_compiler('cpp').get_argument_syntax()
 if cppcompiler == 'msvc'
     options = ['/std:c++latest', '/source-charset:utf-8']
     #VSプロジェクトに編集しうるファイルを追加する
-    files = ['test/spook_test.cpp', 'include/spook.hpp', 'test/testheader/cmath_test.hpp', 'test/testheader/bit_test.hpp', 'testheader/functional_test.hpp']
+    files = ['test/spook_test.cpp', 'include/spook.hpp', 'test/testheader/cmath_test.hpp', 'test/testheader/bit_test.hpp', 'test/testheader/functional_test.hpp']
 elif cppcompiler == 'gcc'
     options = ['-std=c++2a']
     files = ['test/spook_test.cpp']
