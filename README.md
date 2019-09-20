@@ -24,4 +24,11 @@ To use it, `#include "include/spook.h"`.
 2. You can run `meson build`
     - Within Windows, `meson build --backend vs`
 3. Change to the `./build` directory
-4. You can run `ninja` or open VS Solution file(`spook_test.sln`).
+4. You can run `ninja` or open VS Solution file(`spook.sln`).
+
+### Welcome to your contribution!
+
+- Function implementation
+- Bug fix
+- Feature suggestions
+- And so on···
