@@ -78,3 +78,40 @@ namespace spook_test::functional {
         }
     }
 }
+
+namespace spook_test::tuple {
+
+    TEST_CASE("apply test") {
+        {
+            constexpr auto f = [](int n, double, int m, double) constexpr {
+                return n + m;
+            };
+
+            constexpr auto r = spook::apply(f, std::make_tuple(128, 0.0, 64, 1.0));
+            CHECK_EQ(192, r);
+        }
+
+        {
+            constexpr auto f = [](int n, double v, int m, double d) constexpr {
+                return n + m + v + d;
+            };
+
+            constexpr auto r = spook::apply(f, std::make_tuple(128, 32.0, 64, 16.0));
+            CHECK_EQ(240.0, r);
+        }
+    }
+
+    struct test {
+        int n;
+        double v;
+
+        constexpr test(int m, double d) : n{m}, v{d} {}
+    };
+
+    TEST_CASE("make from tuple test") {
+        constexpr auto t = spook::make_from_tuple<test>(std::make_tuple(32, 128.0));
+
+        CHECK_EQ(32, t.n);
+        CHECK_EQ(128.0, t.v);
+    }
+}

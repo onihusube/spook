@@ -1131,7 +1131,7 @@ namespace spook {
 			}
 
 			template <typename F, typename T>
-			SPOOK_CONSTEVAL decltype(auto) invoke_memobj(F &&f, T &&t1) {
+			SPOOK_CONSTEVAL decltype(auto) invoke_memobj(F&& f, T&& t1) {
 				using prime_t = std::remove_cvref_t<decltype(t1)>;
 
 				if constexpr (std::is_base_of_v<type_traits::memberptr_to_t<F>, prime_t>) {
@@ -1158,6 +1158,35 @@ namespace spook {
 				//その他関数呼び出し
 				return std::forward<F>(f)(std::forward<Args>(args)...);
 			}
+		}
+	}
+
+	inline namespace tuple {
+
+		namespace detail {
+			template <typename F, typename Tuple, std::size_t... Index>
+			SPOOK_CONSTEVAL decltype(auto) apply_impl(F&& f, Tuple&& t, std::index_sequence<Index...>) {
+				return spook::invoke(std::forward<F>(f), std::get<Index>(std::forward<Tuple>(t))...);
+			}
+
+			template <typename T, typename Tuple, std::size_t... Index>
+			SPOOK_CONSTEVAL auto make_from_tuple_impl(Tuple&& t, std::index_sequence<Index...>) -> T {
+				return T(std::get<Index>(std::forward<Tuple>(t))...);
+			}
+		}
+
+		template<typename F, typename Tuple>
+		SPOOK_CONSTEVAL auto apply(F&& f, Tuple&& t) -> decltype(std::apply(std::declval<F&>(), std::declval<Tuple&>())) {
+			using prime_tuple_t = std::remove_reference_t<Tuple>;
+			
+			return detail::apply_impl(std::forward<F>(f), std::forward<Tuple>(t), std::make_index_sequence<std::tuple_size_v<prime_tuple_t>>{});
+		}
+
+		template<typename T, typename Tuple>
+		SPOOK_CONSTEVAL auto make_from_tuple(Tuple&& t) -> T {
+			using prime_tuple_t = std::remove_reference_t<Tuple>;
+
+			return detail::make_from_tuple_impl<T>(std::forward<Tuple>(t), std::make_index_sequence<std::tuple_size_v<prime_tuple_t>>{});
 		}
 	}
 }
