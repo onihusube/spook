@@ -31,4 +31,4 @@ To use it, `#include "include/spook.h"`.
 - Function implementation
 - Bug fix
 - Request additional features
-- And so on···
+- Anything is good!
