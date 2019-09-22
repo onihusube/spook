@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <utility>
+#include <complex>
 #include <type_traits>
 #include <cstdint>
 
@@ -838,6 +839,14 @@ namespace spook {
 			if (spook::isfinite(t) && a == b) return a;
 
 			return a + t * (b - a);
+		}
+	}
+
+	inline namespace complex {
+
+		template<typename T CONCEPT_FALLBACK(spook::floating_point<T, enabler<spook::is_floating_point<T>>)>
+		SPOOK_CONSTEVAL auto polar(T rho, T theta) -> std::complex<T> {
+			return{ rho * spook::cos(theta), rho * spook::sin(theta) };
 		}
 	}
 
