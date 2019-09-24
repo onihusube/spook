@@ -14,7 +14,7 @@ else
 endif
 
 #VSプロジェクトに編集しうるファイルを追加する
-files = ['include/spook.hpp', 'test/testheader/cmath_test.hpp', 'test/testheader/bit_test.hpp', 'test/testheader/functional_test.hpp']
+files = ['include/spook.hpp', 'test/testheader/cmath_test.hpp', 'test/testheader/bit_test.hpp', 'test/testheader/functional_test.hpp', 'test/testheader/numeric_test.hpp']
 
 include_dir = include_directories('include', 'test/testheader', 'subprojects/doctest')
 

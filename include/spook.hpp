@@ -850,6 +850,55 @@ namespace spook {
 		}
 	}
 
+	inline namespace numeric {
+
+		namespace detail {
+			template <typename R>
+			SPOOK_CONSTEVAL auto gcd_impl(R m, R n) -> R {
+				const R zero = R(0.0);
+
+				do {
+					R oldn = n;
+					n = m % n;
+					m = oldn;
+				} while (n != zero);
+
+				return R(m);
+			}
+		}
+
+		template<typename M, typename N>
+		SPOOK_CONSTEVAL auto gcd(M mx, N nx) -> std::common_type_t<M, N> {
+			using R = std::common_type_t<M, N>;
+
+			if (spook::iszero(nx) || spook::iszero(mx)) return R(0.0);
+
+			const R abs_m = R(spook::abs(mx));
+			const R abs_n = R(spook::abs(nx));
+
+			R m = std::max(abs_m, abs_n);
+			R n = std::min(abs_m, abs_n);
+
+			return detail::gcd_impl(m, n);
+		}
+
+		template <typename M, typename N>
+		SPOOK_CONSTEVAL auto lcm(M mx, N nx) -> std::common_type_t<M, N> {
+			using R = std::common_type_t<M, N>;
+
+			if (spook::iszero(nx) || spook::iszero(mx)) return R(0.0);
+
+			const R abs_m = R(spook::abs(mx));
+			const R abs_n = R(spook::abs(nx));
+
+			R m = std::max(abs_m, abs_n);
+			R n = std::min(abs_m, abs_n);
+
+			//オーバーフロー対策に大きい方を先に割る
+			return R((m / detail::gcd_impl(m, n)) * n);
+		}
+	}
+
 	inline namespace bit {
 
 		namespace detail {

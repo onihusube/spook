@@ -1,5 +1,7 @@
 #include "doctest/doctest.h"
 
+#include <tuple>
+
 #include "spook.hpp"
 
 namespace spook_test::functional {
