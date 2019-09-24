@@ -69,8 +69,8 @@ namespace spook {
 
 #ifdef __cpp_lib_concepts
 #include <concepts>
-#define CONCEPT_FALLBACK(constraint, sfinae) > requires constraint
-#define CONCEPT_FALLBACK_REDECL(constraint, sfinae) > requires constraint
+#define CONCEPT_FALLBACK(constraint, ...) > requires constraint
+#define CONCEPT_FALLBACK_REDECL(constraint, ...) > requires constraint
 
 namespace spook {
 	inline namespace concepts {
@@ -85,9 +85,9 @@ namespace spook {
 		concept unsigned_integral = spook::is_unsigned<T>::value;
 	}
 }
-#else 
-#define CONCEPT_FALLBACK(constraint, sfinae) , sfinae = nullptr
-#define CONCEPT_FALLBACK_REDECL(constraint, sfinae) , sfinae
+#else
+#define CONCEPT_FALLBACK(constraint, ...) , __VA_ARGS__ = nullptr
+#define CONCEPT_FALLBACK_REDECL(constraint, ...) , __VA_ARGS__
 #endif
 
 
@@ -853,6 +853,11 @@ namespace spook {
 		}
 	}
 
+	inline namespace bit {
+		template <typename T CONCEPT_FALLBACK(spook::unsigned_integral<T, enabler<is_unsigned<T>>)>
+		SPOOK_CONSTEVAL auto countr_zero(T x) -> int;
+	}
+
 	inline namespace numeric {
 
 		namespace detail {
@@ -870,9 +875,14 @@ namespace spook {
 					}
 				}
 			};
-
-			inline constexpr mod_def mod{};
-
+			
+			/**
+			* @brief ユークリッドの互除法によるジェネリックな実装
+			* @detail 型Rはdoubleからの変換が可能であり、コピー（ムーブ）構築・代入が可能である必要がある
+			* @param m, n 最大公約数を求める値のペア、前処理済
+			* @param mod 剰余を求める関数オブジェクト
+			* @return GCD
+			*/
 			template <typename R, typename Mod>
 			SPOOK_CONSTEVAL auto gcd_impl(R m, R n, Mod mod) -> R {
 				const R zero = R(0.0);
@@ -885,37 +895,90 @@ namespace spook {
 
 				return R(m);
 			}
+
+			/**
+			* @brief 符号なし整数型用の効率的な実装
+			* @param m, n 最大公約数を求める値のペア、前処理済
+			* @return GCD
+			*/
+			template <typename I>
+			SPOOK_CONSTEVAL auto gcd_impl(I m, I n) -> I {
+				//素の値を取り出す（2^n倍を出来るだけ戻す）
+				const auto m_zeros = spook::countr_zero(m);
+				m >>= m_zeros;
+				const auto common_zeros = std::min(m_zeros, spook::countr_zero(n));
+				n >>= common_zeros;
+
+				do {
+					//nの素の値を取り出す（2^nで割る）
+					n >>= spook::countr_zero(n);
+
+					//常にnが大きくなるようにswap
+					if (n < m) {
+						auto temp = m;
+						m = n;
+						n = temp;
+					}
+
+					//大きい方から小さい方を引く、ゼロになるまで
+					n -= m;
+				} while (n != 0);
+
+				//最終的にゼロになった時に引いた数字が最大公約数（最初に素の値にした分を元に戻す）
+				return m << common_zeros;
+			}
 		}
 
 		template<typename M, typename N, typename Mod= detail::mod_def>
 		SPOOK_CONSTEVAL auto gcd(M mx, N nx, Mod&& mod = detail::mod_def{}) -> std::common_type_t<M, N> {
 			using R = std::common_type_t<M, N>;
 
-			if (spook::iszero(nx) || spook::iszero(mx)) return R(0.0);
+			if (spook::iszero(mx)) return R(nx);
+			if (spook::iszero(nx)) return R(mx);
 
-			const R abs_m = R(spook::abs(mx));
-			const R abs_n = R(spook::abs(nx));
+			if constexpr (spook::is_integral_v<M> && spook::is_integral_v<N>) {
+				using UR = std::make_unsigned_t<R>;
 
-			R m = std::max(abs_m, abs_n);
-			R n = std::min(abs_m, abs_n);
+				//整数型用の処理
+				UR abs_m = UR(spook::abs(mx));
+				UR abs_n = UR(spook::abs(nx));
 
-			return detail::gcd_impl(m, n, std::forward<Mod>(mod));
+				return R(detail::gcd_impl(abs_m, abs_n));
+			} else {
+				const R abs_m = R(spook::abs(mx));
+				const R abs_n = R(spook::abs(nx));
+
+				R m = std::max(abs_m, abs_n);
+				R n = std::min(abs_m, abs_n);
+
+				return detail::gcd_impl(m, n, std::forward<Mod>(mod));
+			}
 		}
 
 		template <typename M, typename N, typename Mod= detail::mod_def>
 		SPOOK_CONSTEVAL auto lcm(M mx, N nx, Mod&& mod = detail::mod_def{}) -> std::common_type_t<M, N> {
 			using R = std::common_type_t<M, N>;
 
-			if (spook::iszero(nx) || spook::iszero(mx)) return R(0.0);
+			if (spook::iszero(mx) || spook::iszero(nx)) return R(0.0);
 
-			const R abs_m = R(spook::abs(mx));
-			const R abs_n = R(spook::abs(nx));
+			if constexpr (spook::is_integral_v<M> && spook::is_integral_v<N>){
+				using UR = std::make_unsigned_t<R>;
+				//整数型用の処理
+				UR abs_m = UR(spook::abs(mx));
+				UR abs_n = UR(spook::abs(nx));
 
-			R m = std::max(abs_m, abs_n);
-			R n = std::min(abs_m, abs_n);
+				//オーバーフロー対策に大きい方を先に割る
+				return R((abs_m / detail::gcd_impl(abs_m, abs_n)) * abs_n);
+			} else {
+				const R abs_m = R(spook::abs(mx));
+				const R abs_n = R(spook::abs(nx));
 
-			//オーバーフロー対策に大きい方を先に割る
-			return R((m / detail::gcd_impl(m, n, std::forward<Mod>(mod))) * n);
+				R m = std::max(abs_m, abs_n);
+				R n = std::min(abs_m, abs_n);
+
+				//オーバーフロー対策に大きい方を先に割る
+				return R((m / detail::gcd_impl(m, n, std::forward<Mod>(mod))) * n);
+			}
 		}
 	}
 
@@ -1121,7 +1184,7 @@ namespace spook {
 			return (x << r) | (x >> (N - r));
 		}
 
-		template<typename T CONCEPT_FALLBACK(spook::unsigned_integral<T, enabler<is_unsigned<T>>)>
+		template<typename T CONCEPT_FALLBACK_REDECL(spook::unsigned_integral<T, enabler<is_unsigned<T>>)>
 		SPOOK_CONSTEVAL auto countr_zero(T x) -> int {
 			if (x == 0) return sizeof(T) * CHAR_BIT;
 
