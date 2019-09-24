@@ -866,9 +866,7 @@ namespace spook {
 
 				template<typename T>
 				SPOOK_CONSTEVAL auto operator()(T m, T n) -> T {
-					if constexpr (spook::is_unsigned<T>::value) {
-						return m % n;
-					} else  if constexpr (spook::is_floating_point_v<T>) {
+					if constexpr (spook::is_floating_point_v<T>) {
 						return spook::fmod(m, n);
 					} else {
 						return m % n;
@@ -967,7 +965,7 @@ namespace spook {
 				UR abs_m = UR(spook::abs(mx));
 				UR abs_n = UR(spook::abs(nx));
 
-				//オーバーフロー対策に大きい方を先に割る
+				//オーバーフロー対策に大きかろう方を先に割る
 				return R((abs_m / detail::gcd_impl(abs_m, abs_n)) * abs_n);
 			} else {
 				const R abs_m = R(spook::abs(mx));
