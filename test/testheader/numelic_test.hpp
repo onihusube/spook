@@ -2,6 +2,11 @@
 
 #include "spook.hpp"
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4146)
+#endif				  // MSC_VER
+
 namespace spook_test::numelic {
 
     TEST_CASE("gcd test") {
@@ -13,11 +18,11 @@ namespace spook_test::numelic {
             constexpr auto gcd = spook::gcd(0, 1);
             CHECK_EQ(1, gcd);
         }
-        {
-            constexpr auto gcd = spook::gcd(3, 7);
-            CHECK_EQ(1, gcd);
-        }
-        {
+		{
+			constexpr auto gcd = spook::gcd(3, 7);
+			CHECK_EQ(1, gcd);
+		}
+		 {
             constexpr auto gcd = spook::gcd(1071u, 1029);
             CHECK_EQ(21, gcd);
         }
@@ -84,3 +89,7 @@ namespace spook_test::numelic {
         }
     }
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif // MSC_VER

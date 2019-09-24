@@ -928,7 +928,7 @@ namespace spook {
 		}
 
 		template<typename M, typename N, typename Mod= detail::mod_def>
-		SPOOK_CONSTEVAL auto gcd(M mx, N nx, Mod&& mod = detail::mod_def{}) -> std::common_type_t<M, N> {
+		SPOOK_CONSTEVAL auto gcd(M mx, N nx, [[maybe_unused]] Mod&& mod = detail::mod_def{}) -> std::common_type_t<M, N> {
 			using R = std::common_type_t<M, N>;
 
 			if (spook::iszero(mx)) return R(nx);
@@ -954,7 +954,7 @@ namespace spook {
 		}
 
 		template <typename M, typename N, typename Mod= detail::mod_def>
-		SPOOK_CONSTEVAL auto lcm(M mx, N nx, Mod&& mod = detail::mod_def{}) -> std::common_type_t<M, N> {
+		SPOOK_CONSTEVAL auto lcm(M mx, N nx, [[maybe_unused]] Mod&& mod = detail::mod_def{}) -> std::common_type_t<M, N> {
 			using R = std::common_type_t<M, N>;
 
 			if (spook::iszero(mx) || spook::iszero(nx)) return R(0.0);
@@ -1186,7 +1186,7 @@ namespace spook {
 		SPOOK_CONSTEVAL auto countr_zero(T x) -> int {
 			if (x == 0) return sizeof(T) * CHAR_BIT;
 
-			auto n = spook::lsb_pos(x);
+			int n = spook::lsb_pos(x);
 			return --n;
 		}
 
