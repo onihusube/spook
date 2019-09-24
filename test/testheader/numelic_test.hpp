@@ -2,7 +2,7 @@
 
 #include "spook.hpp"
 
-namespace spook_test::numeric {
+namespace spook_test::numelic {
 
     TEST_CASE("gcd test") {
         {

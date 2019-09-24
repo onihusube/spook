@@ -76,6 +76,9 @@ namespace spook {
 	inline namespace concepts {
 
 		template<typename T>
+		concept integral = spook::is_integral_v<T>::value;
+
+		template<typename T>
 		concept floating_point = spook::is_floating_point<T>::value;
 
 		template<typename T>
@@ -853,13 +856,30 @@ namespace spook {
 	inline namespace numeric {
 
 		namespace detail {
-			template <typename R>
-			SPOOK_CONSTEVAL auto gcd_impl(R m, R n) -> R {
+
+			struct mod_def {
+
+				template<typename T>
+				SPOOK_CONSTEVAL auto operator()(T m, T n) -> T {
+					if constexpr (spook::is_unsigned<T>::value) {
+						return m % n;
+					} else  if constexpr (spook::is_floating_point_v<T>) {
+						return spook::fmod(m, n);
+					} else {
+						return m % n;
+					}
+				}
+			};
+
+			inline constexpr mod_def mod{};
+
+			template <typename R, typename Mod>
+			SPOOK_CONSTEVAL auto gcd_impl(R m, R n, Mod mod) -> R {
 				const R zero = R(0.0);
 
 				do {
 					R oldn = n;
-					n = m % n;
+					n = mod(m ,n);
 					m = oldn;
 				} while (n != zero);
 
@@ -867,8 +887,8 @@ namespace spook {
 			}
 		}
 
-		template<typename M, typename N>
-		SPOOK_CONSTEVAL auto gcd(M mx, N nx) -> std::common_type_t<M, N> {
+		template<typename M, typename N, typename Mod= detail::mod_def>
+		SPOOK_CONSTEVAL auto gcd(M mx, N nx, Mod&& mod = detail::mod_def{}) -> std::common_type_t<M, N> {
 			using R = std::common_type_t<M, N>;
 
 			if (spook::iszero(nx) || spook::iszero(mx)) return R(0.0);
@@ -879,11 +899,11 @@ namespace spook {
 			R m = std::max(abs_m, abs_n);
 			R n = std::min(abs_m, abs_n);
 
-			return detail::gcd_impl(m, n);
+			return detail::gcd_impl(m, n, std::forward<Mod>(mod));
 		}
 
-		template <typename M, typename N>
-		SPOOK_CONSTEVAL auto lcm(M mx, N nx) -> std::common_type_t<M, N> {
+		template <typename M, typename N, typename Mod= detail::mod_def>
+		SPOOK_CONSTEVAL auto lcm(M mx, N nx, Mod&& mod = detail::mod_def{}) -> std::common_type_t<M, N> {
 			using R = std::common_type_t<M, N>;
 
 			if (spook::iszero(nx) || spook::iszero(mx)) return R(0.0);
@@ -895,7 +915,7 @@ namespace spook {
 			R n = std::min(abs_m, abs_n);
 
 			//オーバーフロー対策に大きい方を先に割る
-			return R((m / detail::gcd_impl(m, n)) * n);
+			return R((m / detail::gcd_impl(m, n, std::forward<Mod>(mod))) * n);
 		}
 	}
 
