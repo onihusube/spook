@@ -3,6 +3,7 @@
 #include <limits>
 #include <utility>
 #include <complex>
+#include <array>
 #include <type_traits>
 #include <cstdint>
 
@@ -1326,6 +1327,59 @@ namespace spook {
 			using prime_tuple_t = std::remove_reference_t<Tuple>;
 
 			return detail::make_from_tuple_impl<T>(std::forward<Tuple>(t), std::make_index_sequence<std::tuple_size_v<prime_tuple_t>>{});
+		}
+	}
+
+	inline namespace dft {
+
+		template<typename Range>
+		using value_complex = std::complex<typename std::remove_cvref_t<Range>::value_type>;
+
+		/**
+		* @brief 4点FFT
+		* @param first 入力範囲の開始点、少なくとも4要素イテレート可能である事
+		* @param last 入力範囲の終端、使用しない
+		* @detail http://www.lsi-contest.com/2012/shiyou_3-2.html
+		* @return 4点FFT結果（複素数値）
+		*/
+		template<typename Iterator, typename Sentinel>
+		SPOOK_CONSTEVAL auto fft_4(Iterator&& first, [[maybe_unused]] Sentinel&& last) -> std::array<value_complex<std::iterator_traits<Iterator>>, 4> {
+			using prime_iter_t = std::remove_cvref_t<Iterator>;
+			using T = typename std::iterator_traits<prime_iter_t>::value_type;
+			using complex = value_complex<std::iterator_traits<Iterator>>;
+			using Array = std::array<complex, 4>;
+
+			auto iter = first;
+
+			const auto x0 = *iter;
+			const auto x1 = *(++iter);
+			const auto x2 = *(++iter);
+			const auto x3 = *(++iter);
+
+			//x[0]+x[2]
+			const auto x02p = x0 + x2;
+			//x[0]-x[2]
+			const auto x02m = x0 - x2;
+			//x[1]+x[3]
+			const auto x13p = x1 + x3;
+			//x[1]-x[3]
+			const auto x13m = x1 - x3;
+
+			return Array{complex{x02p + x13p, T(0.0)}, complex{x02m, -x13m}, complex{x02p - x13p, T(0.0)}, complex{x02m, x13m}};
+		}
+
+		/**
+		* @brief 4点FFT
+		* @tparam Range 範囲を保持する任意の型、例えばコンテナ
+		* @param container イテレータを引き出し可能な範囲を保持する任意のオブジェクト、少なくとも4要素を保持していること
+		* @return 4点FFT結果（複素数値）
+		*/
+		template<typename Range>
+		SPOOK_CONSTEVAL auto fft_4(Range&& container) -> std::array<value_complex<Range>, 4> {
+			using std::begin;
+			using std::end;
+
+			return spook::fft_4(begin(container), end(container));
 		}
 	}
 }
