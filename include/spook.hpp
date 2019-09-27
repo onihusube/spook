@@ -1299,6 +1299,84 @@ namespace spook {
 				return std::forward<F>(f)(std::forward<Args>(args)...);
 			}
 		}
+
+		/**
+		* @brief first_ofにて意図的な関数のdeleteを検知するためのタグ
+		*/
+		struct deleted_t {};
+
+		/**
+		* @brief first_ofに意図的な関数のdeleteを伝えるためのラッパー
+		* @tparam F deleteしたい呼び出しを持つ関数型
+		*/
+		template<typename F>
+		struct delete_tf {
+
+			template<typename Fn = F>
+			SPOOK_CONSTEVAL delete_tf(Fn&& f) : func(std::forward<Fn>(f))
+			{}
+
+			template<typename Args>
+			requires std::is_invocable_v<decltype(first), Args...>
+			SPOOK_CONSTEVAL auto operator()(Args&&...) -> deleted_t;
+
+		private:
+			[[no_unique_address]] F func;
+		};
+
+		/**
+		* @brief 複数の関数をひとまとめにした関数オブジェクトを作成する
+		* @tparam Fs 任意個数のCallableオブジェクト
+		* @detail 呼び出し時は登録した順番に呼び出し可能かをチェックする
+		*/
+		template<typename... Fs>
+		struct first_of {};
+
+		template<typename... Fs>
+		first_of(Fs...) -> first_of<std::decay_t<Fs>...>;
+
+		/**
+		* @brief 複数の関数をひとまとめにした関数オブジェクトを作成する、first_ofの実装部分
+		* @tparam F 先頭のCallableオブジェクト
+		* @tparam Fs 任意個数のCallableオブジェクト
+		* @detail 呼び出し時は登録した順番に呼び出し可能かをチェックする
+		* @detail https://brevzin.github.io/c++/2019/09/23/declarative-cpos/
+		*/
+		template <typename F, typename... Fs>
+		struct first_of<F, Fs...> {
+
+			template<typename Fn = F, typename... Fns>
+			constexpr first_of(Fn&& f, Fns&&... fs)
+				: first(std::forward<Fn>(f))
+				, rest(std::forward<Fns>(fs)...)
+			{}
+
+			template <typename... Args>
+			constexpr decltype(auto) operator()(Args &&... args) {
+				if constexpr (std::is_invocable_v<decltype(first), Args...>) {
+					return first(std::forward<Args>(args)...);
+				} else {
+					return rest(std::forward<Args>(args)...);
+				}
+			}
+
+			template <typename... Args>
+			requires std::is_invocable_v<decltype(first), Args...> && 
+					 std::same_as<std::invoke_result_t<decltype(first), Args...>, deleted_t>
+			constexpr decltype(auto) operator()(Args &&... args) {
+				if constexpr (std::is_invocable_v<decltype(first), Args...>) {
+					return first(std::forward<Args>(args)...);
+				} else {
+					return rest(std::forward<Args>(args)...);
+				}
+			}
+
+			using Subsequent = first_of<Fs...>;
+
+		private:
+			[[no_unique_address]] F first;
+			[[no_unique_address]] Subsequent rest;
+		};
 	}
 
 	inline namespace tuple {
