@@ -1309,16 +1309,15 @@ namespace spook {
 		* @brief first_ofに意図的な関数のdeleteを伝えるためのラッパー
 		* @tparam F deleteしたい呼び出しを持つ関数型
 		*/
-		template<typename F>
+		template <typename F>
 		struct delete_tf {
 
-			template<typename Fn = F>
-			SPOOK_CONSTEVAL delete_tf(Fn&& f) : func(std::forward<Fn>(f))
-			{}
+			template <typename Fn = F>
+			constexpr delete_tf(Fn &&f) : func(std::forward<Fn>(f)) {}
 
-			template<typename Args>
-			requires std::is_invocable_v<decltype(first), Args...>
-			SPOOK_CONSTEVAL auto operator()(Args&&...) -> deleted_t;
+			template <typename... Args>
+			requires std::is_invocable_v<F, Args...>
+			constexpr auto operator()(Args&&...) -> deleted_t;
 
 		private:
 			[[no_unique_address]] F func;
@@ -1352,24 +1351,18 @@ namespace spook {
 			{}
 
 			template <typename... Args>
-			constexpr decltype(auto) operator()(Args &&... args) {
+			SPOOK_CONSTEVAL decltype(auto) operator()(Args &&... args) {
 				if constexpr (std::is_invocable_v<decltype(first), Args...>) {
-					return first(std::forward<Args>(args)...);
+					return spook::invoke(first, std::forward<Args>(args)...);
 				} else {
-					return rest(std::forward<Args>(args)...);
+					return spook::invoke(rest, std::forward<Args>(args)...);
 				}
 			}
 
 			template <typename... Args>
-			requires std::is_invocable_v<decltype(first), Args...> && 
-					 std::same_as<std::invoke_result_t<decltype(first), Args...>, deleted_t>
-			constexpr decltype(auto) operator()(Args &&... args) {
-				if constexpr (std::is_invocable_v<decltype(first), Args...>) {
-					return first(std::forward<Args>(args)...);
-				} else {
-					return rest(std::forward<Args>(args)...);
-				}
-			}
+			requires std::is_invocable_v<F, Args...> && 
+					 std::same_as<std::invoke_result_t<F, Args...>, deleted_t>
+			SPOOK_CONSTEVAL void operator()(Args&&...) = delete;
 
 			using Subsequent = first_of<Fs...>;
 
