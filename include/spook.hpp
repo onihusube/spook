@@ -1310,18 +1310,23 @@ namespace spook {
 		* @tparam F deleteしたい呼び出しを持つ関数型
 		*/
 		template <typename F>
-		struct delete_tf {
+		struct delete_if {
 
-			template <typename Fn = F>
-			constexpr delete_tf(Fn &&f) : func(std::forward<Fn>(f)) {}
+			template<typename Fn = F>
+			constexpr delete_if(Fn&& f) : func(std::forward<Fn>(f)) {}
 
 			template <typename... Args>
-			requires std::is_invocable_v<F, Args...>
-			constexpr auto operator()(Args&&...) -> deleted_t;
+			requires std::invocable<decltype(this->func), Args...>
+			SPOOK_CONSTEVAL auto operator()(Args&&...) -> deleted_t {
+				return {};
+			}
 
 		private:
 			[[no_unique_address]] F func;
 		};
+
+		template<typename F>
+		delete_if(F&&) -> delete_if<std::decay_t<F>>;
 
 		/**
 		* @brief 複数の関数をひとまとめにした関数オブジェクトを作成する
@@ -1329,10 +1334,14 @@ namespace spook {
 		* @detail 呼び出し時は登録した順番に呼び出し可能かをチェックする
 		*/
 		template<typename... Fs>
-		struct first_of {};
+		struct first_of {
+			SPOOK_CONSTEVAL void operator()(...) const {
+				static_assert([] {return false; }(), "No matching function was found.");
+			}
+		};
 
 		template<typename... Fs>
-		first_of(Fs...) -> first_of<std::decay_t<Fs>...>;
+		first_of(Fs&&...) -> first_of<std::decay_t<Fs>...>;
 
 		/**
 		* @brief 複数の関数をひとまとめにした関数オブジェクトを作成する、first_ofの実装部分
@@ -1351,18 +1360,20 @@ namespace spook {
 			{}
 
 			template <typename... Args>
-			SPOOK_CONSTEVAL decltype(auto) operator()(Args &&... args) {
-				if constexpr (std::is_invocable_v<decltype(first), Args...>) {
+			SPOOK_CONSTEVAL decltype(auto) operator()(Args &&... args) const {
+				if constexpr (std::invocable<decltype(this->first), Args...>) {
 					return spook::invoke(first, std::forward<Args>(args)...);
 				} else {
 					return spook::invoke(rest, std::forward<Args>(args)...);
 				}
 			}
 
-			template <typename... Args>
-			requires std::is_invocable_v<F, Args...> && 
-					 std::same_as<std::invoke_result_t<F, Args...>, deleted_t>
-			SPOOK_CONSTEVAL void operator()(Args&&...) = delete;
+			template<typename... Args>
+			requires std::invocable<decltype(this->first), Args...> &&
+					 std::same_as<std::invoke_result_t<decltype(this->first), Args...>, spook::deleted_t>
+			SPOOK_CONSTEVAL void operator()(Args&&...) {
+				static_assert([]{return false; }(), "Deleted overload was invoked.");
+			}
 
 			using Subsequent = first_of<Fs...>;
 

@@ -79,6 +79,29 @@ namespace spook_test::functional {
             CHECK_EQ(128, n);
         }
     }
+
+	TEST_CASE("first_of test") {
+		constexpr auto hof = spook::first_of(
+			[]() constexpr {return 128; },
+			[](int n) constexpr {return n * 2; },
+			//[](auto&&) { return 0; });
+			spook::delete_if([](auto&&) { return 0; }));
+		
+		constexpr auto n1 = hof();
+		CHECK_EQ(128, n1);
+
+		constexpr auto n2 = hof(3);
+		CHECK_EQ(6, n2);
+
+		//hof(spook::deleted_t{});
+
+		//auto m = [](auto&&) { return 0; };
+		//auto l = spook::delete_if([](auto&&) { return 0; });
+
+		//using t = std::invoke_result_t<decltype(l), spook::deleted_t> ;
+
+		//static_assert(std::invocable<decltype(l), spook::deleted_t&&>);
+	}
 }
 
 namespace spook_test::tuple {
