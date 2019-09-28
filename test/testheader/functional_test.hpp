@@ -80,6 +80,7 @@ namespace spook_test::functional {
         }
     }
 
+#ifdef __cpp_lib_concepts
 	TEST_CASE("first_of test") {
 		constexpr auto hof = spook::first_of(
 			[]() constexpr {return 128; },
@@ -98,6 +99,7 @@ namespace spook_test::functional {
 		auto l = spook::delete_if([](auto&&) { return 0; });
 		static_assert(std::invocable<decltype(l), spook::deleted_t>);
 	}
+#endif
 }
 
 namespace spook_test::tuple {
