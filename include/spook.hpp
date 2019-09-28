@@ -1300,6 +1300,8 @@ namespace spook {
 			}
 		}
 
+#ifdef __cpp_lib_concepts
+
 		/**
 		* @brief first_ofにて意図的な関数のdeleteを検知するためのタグ
 		*/
@@ -1388,6 +1390,8 @@ namespace spook {
 			[[no_unique_address]] F first;
 			[[no_unique_address]] Subsequent rest;
 		};
+#endif
+
 	}
 
 	inline namespace tuple {
