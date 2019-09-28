@@ -93,14 +93,10 @@ namespace spook_test::functional {
 		constexpr auto n2 = hof(3);
 		CHECK_EQ(6, n2);
 
-		//hof(spook::deleted_t{});
+		//auto t = hof(spook::deleted_t{});
 
-		//auto m = [](auto&&) { return 0; };
-		//auto l = spook::delete_if([](auto&&) { return 0; });
-
-		//using t = std::invoke_result_t<decltype(l), spook::deleted_t> ;
-
-		//static_assert(std::invocable<decltype(l), spook::deleted_t&&>);
+		auto l = spook::delete_if([](auto&&) { return 0; });
+		static_assert(std::invocable<decltype(l), spook::deleted_t>);
 	}
 }
 

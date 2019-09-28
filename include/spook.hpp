@@ -1316,10 +1316,13 @@ namespace spook {
 			constexpr delete_if(Fn&& f) : func(std::forward<Fn>(f)) {}
 
 			template <typename... Args>
-			requires std::invocable<decltype(this->func), Args...>
-			SPOOK_CONSTEVAL auto operator()(Args&&...) -> deleted_t {
+			requires std::invocable<F const&, Args...>
+			SPOOK_CONSTEVAL auto operator()(Args&&...) const -> deleted_t {
+				static_assert([] {return false; }(), "Deleted overload was invoked.");
 				return {};
 			}
+
+			//using Callable_t = std::add_lvalue_reference_t<std::add_const_t<F>>;
 
 		private:
 			[[no_unique_address]] F func;
@@ -1336,7 +1339,7 @@ namespace spook {
 		template<typename... Fs>
 		struct first_of {
 			SPOOK_CONSTEVAL void operator()(...) const {
-				static_assert([] {return false; }(), "No matching function was found.");
+				static_assert([] {return false; }(), "No matching function for call to `first_of`. No matching function was found.");
 			}
 		};
 
@@ -1361,17 +1364,21 @@ namespace spook {
 
 			template <typename... Args>
 			SPOOK_CONSTEVAL decltype(auto) operator()(Args &&... args) const {
-				if constexpr (std::invocable<decltype(this->first), Args...>) {
+				if constexpr (std::invocable<F const&, Args...>) {
 					return spook::invoke(first, std::forward<Args>(args)...);
 				} else {
 					return spook::invoke(rest, std::forward<Args>(args)...);
 				}
 			}
 
+			/**
+			* @brief delete_ifでラップされ登録されている関数呼び出し、コンパイルエラーをおこす
+			* @detail のだけど、現状こっちは呼ばれていない・・・
+			*/
 			template<typename... Args>
-			requires std::invocable<decltype(this->first), Args...> &&
+			requires std::invocable<F const&, Args...> &&
 					 std::same_as<std::invoke_result_t<decltype(this->first), Args...>, spook::deleted_t>
-			SPOOK_CONSTEVAL void operator()(Args&&...) {
+			SPOOK_CONSTEVAL void operator()(Args&&...) const {
 				static_assert([]{return false; }(), "Deleted overload was invoked.");
 			}
 
